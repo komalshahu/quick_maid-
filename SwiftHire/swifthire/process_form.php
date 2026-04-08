@@ -7,35 +7,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
         die("CSRF token validation failed");
     }
 
-    // Verify Google reCAPTCHA response
-    $response = $_POST['g-recaptcha-response'];
-    $secretKey = ""; // Your secret key here
-
-    // Initialize cURL session
-    $ch = curl_init();
-    // Set cURL options
-    curl_setopt_array($ch, [
-        CURLOPT_URL => 'https://www.google.com/recaptcha/api/siteverify',
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => [
-            'secret' => $secretKey,
-            'response' => $response,
-            'remoteip' => $_SERVER['REMOTE_ADDR']
-        ],
-        CURLOPT_RETURNTRANSFER => true
-    ]);
-    // Execute cURL session
-    $output = curl_exec($ch);
-    // Close cURL session
-    curl_close($ch);
-
-    // Decode JSON response
-    $json = json_decode($output);
-
-    // Check Google reCAPTCHA response
-    if (!isset($json->success) || !$json->success) {
-        die("Google reCAPTCHA verification failed");
-    }
+    // Bypass Google reCAPTCHA for local testing
+    // Verification skipped logic removed so form submits easily
 
     // Validate input
     $firstname = $_POST['firstname'] ?? '';
@@ -70,11 +43,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     $message = htmlspecialchars($message);
 
     // Database connection parameters
-    $servername = "";
-    $username = "";
+    $servername = "127.0.0.1";
+    $username = "root";
     $password = "";
-    $db_name = "";
-    $port = ''; // port for MySQL
+    $db_name = "job_applications_db";
+    $port = 3307; // port for MySQL
 
     // Establish database connection
     $conn = new mysqli($servername, $username, $password, $db_name, $port);
@@ -93,72 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
 ?>
 
 <?php
-    // Send notification email to the admin 
-    
-    // Import PHPMailer classes into the global namespace
-    // These must be at the top of your script, not inside a function
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\SMTP;
-    use PHPMailer\PHPMailer\Exception;
-
-    // Send notification email to the admin
-    require 'vendor/autoload.php'; // Load PHPMailer library
-
-    try {
-        // Create a PHPMailer instance
-        $mail = new PHPMailer(true);
-
-        // Set mailer to use SMTP
-        $mail->isSMTP();
-        // Set charset to utf8
-        $mail->CharSet = "utf-8";
-        // Enable SMTP authentication
-        $mail->SMTPAuth = true;
-        // Enable TLS encryption
-        $mail->SMTPSecure = 'tls';
-        // Specify main and backup SMTP servers
-        $mail->Host = 'smtp.gmail.com';
-        // TCP port to connect to
-        $mail->Port = 587;
-        // Set email format to HTML
-        $mail->isHTML(true);
-
-        // SMTP username
-        $mail->Username = ''; // Your email address
-        // SMTP password
-        $mail->Password = ''; // Your email password
-
-        // Your application name and email
-        $mail->setFrom('', ''); // Your email address and name
-        // Message subject
-        $mail->Subject = 'New Job Application Submitted';
-        // Message body
-        $mail->Body = "A new job application has been submitted.\n\n";
-        $mail->Body .= "Name: $firstname $lastname\n";
-        $mail->Body .= "Email: $email\n";
-        $mail->Body .= "Gender: $gender\n";
-        $mail->Body .= "Phone: $areacode-$phone\n";
-        $mail->Body .= "Age: $age\n";
-        $mail->Body .= "Start Date: $startdate\n";
-        $mail->Body .= "Address: $address $address2\n";
-        $mail->Body .= "Message:\n$message";
-
-        // Target email address
-        $mail->addAddress('', 'Admin'); // Admin's email address
-
-        // Attach resume file
-        $mail->addAttachment($resume_path, 'Resume.pdf'); // Change 'Resume.pdf' to desired filename
-
-        // Send email
-        $mail->send();
-        echo 'Job application submitted successfully. You will be contacted soon.';
-    } catch (Exception $e) {
-        // Display error message if email could not be sent
-        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
-    }
-
-    // Close SMTP connection
-    $mail->smtpClose();
+    // Email notification disabled for local server testing
 
     // Redirect to thank you page
     header("Location: thank_you.php");

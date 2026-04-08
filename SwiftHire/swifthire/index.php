@@ -169,10 +169,10 @@ $_SESSION['csrf_token'] = $token;
 
         <input type="hidden" name="csrf_token" value="<?php echo $token; ?>">
         
-        <!-- Google reCAPTCHA -->
-        <div class="form-group">
+        <!-- Google reCAPTCHA disabled for local testing -->
+        <!-- <div class="form-group">
             <div class="g-recaptcha" data-sitekey=""></div>
-        </div>
+        </div> -->
         
         <button class="formbold-btn" type="submit" name="submit">Apply Now</button>
       </form>
@@ -189,8 +189,8 @@ $_SESSION['csrf_token'] = $token;
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <!-- Custom JS -->
 <script src="js/script.js"></script>
-<!-- Google reCAPTCHA -->
-<script src="https://www.google.com/recaptcha/api.js"></script>
+<!-- Google reCAPTCHA src disabled -->
+<!-- <script src="https://www.google.com/recaptcha/api.js"></script> -->
 <script type="text/javascript" src="js/jquery-1.11.3-jquery.min.js"></script>
 
 </body>
