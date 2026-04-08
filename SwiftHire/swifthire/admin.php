@@ -47,9 +47,19 @@ $result = $conn->query($sql);
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container-fluid">
     <a class="navbar-brand" href="#">SwiftHire Admin</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link active" href="admin.php">Data Table</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="admin_report.php">Reports & Analytics</a>
+            </li>
+        </ul>
+    </div>
     <div class="d-flex">
         <a href="logout.php" class="btn btn-outline-light">Logout</a>
     </div>

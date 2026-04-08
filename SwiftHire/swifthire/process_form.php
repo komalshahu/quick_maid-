@@ -3,6 +3,12 @@
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     // Verify CSRF token
     session_start();
+    
+    if (!isset($_SESSION['user_id'])) {
+        die("User authentication failed. You must be logged in.");
+    }
+    $user_id = $_SESSION['user_id'];
+
     if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("CSRF token validation failed");
     }
@@ -57,8 +63,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     }
 
     // Insert data into database
-    $stmt = $conn->prepare("INSERT INTO job_applications (firstname, lastname, email, gender, areacode, phone, age, startdate, address, address2, message, resume_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssisssss", $firstname, $lastname, $email, $gender, $areacode, $phone, $age, $startdate, $address, $address2, $message, $resume_path);
+    $stmt = $conn->prepare("INSERT INTO job_applications (user_id, firstname, lastname, email, gender, areacode, phone, age, startdate, address, address2, message, resume_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("issssssisssss", $user_id, $firstname, $lastname, $email, $gender, $areacode, $phone, $age, $startdate, $address, $address2, $message, $resume_path);
     $stmt->execute();
     $stmt->close();
     $conn->close();

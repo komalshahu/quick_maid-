@@ -1,10 +1,14 @@
 
-<!-- CSRF Token -->
 <?php
 session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 $token = bin2hex(random_bytes(32));
 $_SESSION['csrf_token'] = $token;
 ?>
+<!-- CSRF Token -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +22,16 @@ $_SESSION['csrf_token'] = $token;
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">SwiftHire Portal</a>
+    <div class="d-flex">
+        <a href="user_dashboard.php" class="btn btn-primary me-2">Dashboard</a>
+        <a href="user_logout.php" class="btn btn-danger">Logout</a>
+    </div>
+  </div>
+</nav>
 
 <div class="container">
     <div class="row justify-content-center">
@@ -36,9 +50,9 @@ $_SESSION['csrf_token'] = $token;
               type="text"
               name="firstname"
               id="firstname"
-              placeholder="Your first name"
+              value="<?php echo htmlspecialchars($_SESSION['user_firstname']); ?>"
               class="formbold-form-input"
-              required
+              readonly
             />
           </div>
   
@@ -48,9 +62,9 @@ $_SESSION['csrf_token'] = $token;
               type="text"
               name="lastname"
               id="lastname"
-              placeholder="Your last name"
+              value="<?php echo htmlspecialchars($_SESSION['user_lastname']); ?>"
               class="formbold-form-input"
-              required
+              readonly
             />
           </div>
         </div>
@@ -62,9 +76,9 @@ $_SESSION['csrf_token'] = $token;
               type="email"
               name="email"
               id="email"
-              placeholder="example@email.com"
+              value="<?php echo htmlspecialchars($_SESSION['user_email']); ?>"
               class="formbold-form-input"
-              required
+              readonly
               />
           </div>
   
