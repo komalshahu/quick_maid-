@@ -75,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     // Email notification disabled for local server testing
 
     // Redirect to thank you page
-    header("Location: thank_you.php");
+    $nomdi = isset($_POST['nomdi']) ? $_POST['nomdi'] : '0';
+    header("Location: thank_you.php?nomdi=" . $nomdi);
     exit();
 ?>

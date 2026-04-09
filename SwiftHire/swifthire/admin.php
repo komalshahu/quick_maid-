@@ -34,6 +34,8 @@ $result = $conn->query($sql);
     <title>Admin Dashboard - Job Applications</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
         .navbar { margin-bottom: 2rem; }
@@ -47,9 +49,11 @@ $result = $conn->query($sql);
 </head>
 <body>
 
+<?php $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1'; ?>
+<?php if(!$hide_nav): ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">SwiftHire Admin</a>
+    <a class="navbar-brand" href="#">QuickMaid Admin</a>
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
@@ -65,13 +69,17 @@ $result = $conn->query($sql);
     </div>
   </div>
 </nav>
+<?php else: ?>
+    <!-- Navbar hidden in MDI mode. Add margin for aesthetic spacing if needed -->
+    <div class="mb-4"></div>
+<?php endif; ?>
 
 <div class="container-fluid px-4">
     <h2 class="mb-4">Submitted Applications</h2>
     
     <div class="table-container table-responsive">
-        <table class="table table-hover table-bordered">
-            <thead class="table-light">
+        <table id="applicationsTable" class="table table-hover table-bordered table-striped">
+            <thead class="table-dark">
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
@@ -105,6 +113,21 @@ $result = $conn->query($sql);
     </div>
 </div>
 
+<!-- jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#applicationsTable').DataTable({
+            "order": [[ 5, "desc" ]],
+            "pageLength": 10,
+            "language": {
+                "search": "Quick Filter:"
+            }
+        });
+    });
+</script>
 </body>
 </html>
 <?php

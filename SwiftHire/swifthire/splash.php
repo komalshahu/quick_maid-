@@ -11,7 +11,9 @@ if (!isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SwiftHire - Loading...</title>
+    <title>QuickMaid - Loading...</title>
+    <!-- Favicon -->
+    <link rel="icon" href="images/logo.png" type="image/png">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
@@ -125,10 +127,10 @@ if (!isset($_SESSION['user_id'])) {
 
 <div class="splash-container">
     <div class="logo-container">
-        <img src="images/logo.png" alt="SwiftHire Logo">
+        <img src="images/logo.png" alt="QuickMaid Logo">
     </div>
     
-    <div class="app-name">SwiftHire</div>
+    <div class="app-name">QuickMaid</div>
     <div class="version">VERSION 1.0.0</div>
 
     <div class="progress-wrapper">
@@ -163,7 +165,7 @@ if (!isset($_SESSION['user_id'])) {
             progress = 100;
             clearInterval(interval);
             setTimeout(() => {
-                window.location.href = 'user_dashboard.php';
+                window.location.href = 'mdi_main.php';
             }, 300); // Tiny pause at 100% before redirect
         }
         
