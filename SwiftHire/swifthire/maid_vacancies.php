@@ -35,10 +35,14 @@ if (!empty($category)) {
 }
 
 if (!empty($location)) {
-    $query .= " AND (country = ? OR location = ?)";
-    $params[] = $location;
-    $params[] = $location;
-    $types .= "ss";
+    if ($location === 'Abroad') {
+        $query .= " AND country != 'India'";
+    } else {
+        $query .= " AND (country = ? OR location = ?)";
+        $params[] = $location;
+        $params[] = $location;
+        $types .= "ss";
+    }
 }
 
 $query .= " ORDER BY created_at DESC";
@@ -341,10 +345,16 @@ while($c = $countries_res->fetch_assoc()) { $countries[] = $c['country']; }
                 </div>
                 <div class="col-lg-3">
                     <select name="location" class="form-select form-control-custom">
-                        <option value="">Anywhere Abroad</option>
+                        <option value="">All Locations</option>
+                        <option value="India" <?php if($location=='India') echo 'selected'; ?>>Anywhere in India</option>
+                        <option value="Abroad" <?php if($location=='Abroad') echo 'selected'; ?>>Anywhere Abroad</option>
+                        <optgroup label="Specific Countries">
                         <?php foreach($countries as $c): ?>
-                            <option value="<?php echo $c; ?>" <?php if($location==$c) echo 'selected'; ?>><?php echo $c; ?></option>
+                            <?php if($c !== 'India'): ?>
+                                <option value="<?php echo $c; ?>" <?php if($location==$c) echo 'selected'; ?>><?php echo $c; ?></option>
+                            <?php endif; ?>
                         <?php endforeach; ?>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="col-lg-2">
