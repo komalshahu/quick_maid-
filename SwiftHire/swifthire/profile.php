@@ -296,7 +296,7 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                 <div class="text-center mt-4">
                     <div class="glass-card" style="border: 2px dashed rgba(99, 102, 241, 0.4);">
                         <h3>Become a Certified Professional</h3>
-                        <p class="text-secondary">Register your service profile to appear in the Global Job Board and start accepting bookings.</p>
+                        <p class="text-secondary">Register your service profile to appear in the Job Openings and start accepting bookings.</p>
                         <a href="register_maid.php" class="btn-premium mt-2">Finish Maid Registration</a>
                     </div>
                 </div>

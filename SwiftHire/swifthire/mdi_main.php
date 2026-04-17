@@ -73,8 +73,8 @@ $name = $is_admin ? "Administrator" : htmlspecialchars($_SESSION['user_firstname
         <a href="profile.php?nomdi=1" target="contentFrame" class="nav-link" onclick="setActive(this, 'My Professional Profile')">
             <i class="fas fa-id-badge"></i> My Profile
         </a>
-        <a href="maid_vacancies.php?nomdi=1" target="contentFrame" class="nav-link active" onclick="setActive(this, 'Job Board & Vacancies')">
-            <i class="fas fa-search"></i> Job Board & Vacancies
+        <a href="maid_vacancies.php?nomdi=1" target="contentFrame" class="nav-link active" onclick="setActive(this, 'Job Openings')">
+            <i class="fas fa-search"></i> Job Openings
         </a>
         <a href="user_dashboard.php?nomdi=1" target="contentFrame" class="nav-link" onclick="setActive(this, 'Application History')">
             <i class="fas fa-history"></i> Application History
@@ -103,7 +103,7 @@ $name = $is_admin ? "Administrator" : htmlspecialchars($_SESSION['user_firstname
             <h5 class="m-0 text-secondary fw-normal d-flex align-items-center">
                 <i class="fas fa-layer-group me-2" style="color:#a1a5b7;"></i> Workspace 
                 <i class="fas fa-chevron-right mx-2 text-muted" style="font-size: 0.8rem;"></i> 
-                <span id="moduleTitle" style="color:#4f46e5; font-weight:700;"><?php echo $is_admin ? 'Datatable / Output' : 'Job Board & Vacancies'; ?></span>
+                <span id="moduleTitle" style="color:#4f46e5; font-weight:700;"><?php echo $is_admin ? 'Datatable / Output' : 'Job Openings'; ?></span>
             </h5>
         </div>
         <div class="d-flex align-items-center gap-4">
@@ -189,10 +189,10 @@ $name = $is_admin ? "Administrator" : htmlspecialchars($_SESSION['user_firstname
                         </div>
                         <div style="flex-grow: 1;">
                             <div style="display: flex; justify-content: space-between;">
-                                <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">New Vacancies in Dubai</div>
+                                <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">New Vacancies in India</div>
                                 <span style="font-size:0.7rem; color:#94a3b8;">1h ago</span>
                             </div>
-                            <div style="font-size:0.85rem; color:#64748b; line-height:1.4; margin-top:2px;">5 new premium positions matched your "Cook" specialization in Palm Jumeirah.</div>
+                            <div style="font-size:0.85rem; color:#64748b; line-height:1.4; margin-top:2px;">17 new premium positions are now available in the Job Openings across India.</div>
                         </div>
                     </div>
 

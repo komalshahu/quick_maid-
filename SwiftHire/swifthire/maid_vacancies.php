@@ -15,7 +15,7 @@ $keyword = $_GET['search'] ?? '';
 $category = $_GET['category'] ?? '';
 $location = $_GET['location'] ?? '';
 
-$query = "SELECT * FROM vacancies WHERE 1=1";
+$query = "SELECT * FROM vacancies WHERE country = 'India'";
 $params = [];
 $types = "";
 
@@ -35,17 +35,12 @@ if (!empty($category)) {
 }
 
 if (!empty($location)) {
-    if ($location === 'Abroad') {
-        $query .= " AND country != 'India'";
-    } else {
-        $query .= " AND (country = ? OR location = ?)";
-        $params[] = $location;
-        $params[] = $location;
-        $types .= "ss";
-    }
+    $query .= " AND location = ?";
+    $params[] = $location;
+    $types .= "s";
 }
 
-$query .= " ORDER BY created_at DESC";
+$query .= " ORDER BY created_at DESC LIMIT 50";
 
 $stmt = $conn->prepare($query);
 if (!empty($params)) {
@@ -61,17 +56,17 @@ while ($row = $result->fetch_assoc()) {
 $total_jobs = count($vacancies);
 $stmt->close();
 
-// Get unique countries for filter
-$countries_res = $conn->query("SELECT DISTINCT country FROM vacancies ORDER BY country");
-$countries = [];
-while($c = $countries_res->fetch_assoc()) { $countries[] = $c['country']; }
+// Get unique locations for filter in India
+$loc_res = $conn->query("SELECT DISTINCT location FROM vacancies WHERE country = 'India' ORDER BY location");
+$india_locations = [];
+while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maid Vacancies - Global Job Board | QuickMaid</title>
+    <title>Job Openings - QuickMaid</title>
     <link rel="icon" href="images/logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -320,8 +315,8 @@ while($c = $countries_res->fetch_assoc()) { $countries[] = $c['country']; }
 
 <div class="hero-section text-center">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-3">Global <span style="color: #818cf8;">Maid Vacancies</span></h1>
-        <p class="lead opacity-75">Explore premium household job opportunities across the UK, UAE, Singapore, and more.</p>
+        <h1 class="display-4 fw-bold mb-3">Jobs in <span style="color: #818cf8;">India</span></h1>
+        <p class="lead opacity-75">Explore premium household job opportunities across India.</p>
     </div>
     
     <div class="search-container">
@@ -345,16 +340,10 @@ while($c = $countries_res->fetch_assoc()) { $countries[] = $c['country']; }
                 </div>
                 <div class="col-lg-3">
                     <select name="location" class="form-select form-control-custom">
-                        <option value="">All Locations</option>
-                        <option value="India" <?php if($location=='India') echo 'selected'; ?>>Anywhere in India</option>
-                        <option value="Abroad" <?php if($location=='Abroad') echo 'selected'; ?>>Anywhere Abroad</option>
-                        <optgroup label="Specific Countries">
-                        <?php foreach($countries as $c): ?>
-                            <?php if($c !== 'India'): ?>
-                                <option value="<?php echo $c; ?>" <?php if($location==$c) echo 'selected'; ?>><?php echo $c; ?></option>
-                            <?php endif; ?>
+                        <option value="">All Locations in India</option>
+                        <?php foreach($india_locations as $loc): ?>
+                            <option value="<?php echo htmlspecialchars($loc); ?>" <?php if($location==$loc) echo 'selected'; ?>><?php echo htmlspecialchars($loc); ?></option>
                         <?php endforeach; ?>
-                        </optgroup>
                     </select>
                 </div>
                 <div class="col-lg-2">
@@ -370,7 +359,7 @@ while($c = $countries_res->fetch_assoc()) { $countries[] = $c['country']; }
         <div class="col-lg-10">
             
             <div class="result-count">
-                <i class="fas fa-briefcase"></i> Current Openings Abroad <span><?php echo $total_jobs; ?> Jobs</span>
+                <i class="fas fa-briefcase"></i> Current Openings in India <span><?php echo $total_jobs; ?> Jobs</span>
             </div>
 
             <?php if(empty($vacancies)): ?>
@@ -398,17 +387,47 @@ while($c = $countries_res->fetch_assoc()) { $countries[] = $c['country']; }
                             </div>
                         </div>
 
-                        <div class="job-details">
-                            <div class="detail-item">
-                                <i class="fas fa-globe-americas"></i> <?php echo htmlspecialchars($v['country']); ?>
+                            <div class="job-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($v['location']); ?>, India
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i> <?php echo htmlspecialchars($v['working_time']); ?>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-calendar-alt"></i> <?php echo htmlspecialchars($v['working_days']); ?>
+                                </div>
                             </div>
-                            <div class="detail-item">
-                                <i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($v['location']); ?>
+
+                            <div class="mb-3 px-1">
+                                <?php
+                                    $work_info = "Cloth cleaning, toilet cleaning, ironing, dusting, sweeping, mopping, and other household works.";
+                                    if(isset($v['work_types']) && !empty($v['work_types'])) {
+                                        $work_info = htmlspecialchars($v['work_types']);
+                                    } elseif (stripos($v['category'], 'Cooking') !== false) {
+                                        $work_info = "Cooking full meals, kitchen cleaning, grocery prep, dishwashing, and other kitchen works.";
+                                    } elseif (stripos($v['category'], 'Babysitting') !== false) {
+                                        $work_info = "Childcare, feeding children, light ironing, playing with kids, and other related works.";
+                                    } elseif (stripos($v['category'], 'Cleaning') !== false) {
+                                        $work_info = "Cloth cleaning, toilet cleaning, ironing, dusting, sweeping, mopping, and other cleaning works.";
+                                    } else {
+                                        $work_info = "Cloth cleaning, toilet cleaning, ironing, dusting, basic cooking, and other household works.";
+                                    }
+                                ?>
+                                <div class="work-types-preview" style="font-size: 0.95rem; color: #475569;">
+                                    <i class="fas fa-tasks text-primary me-2"></i> <strong>Work:</strong> <?php echo substr($work_info, 0, 45) . '...'; ?> 
+                                    <a class="fw-bold" style="color: var(--primary); text-decoration: none; cursor: pointer;" data-bs-toggle="collapse" href="#desc-<?php echo $v['id']; ?>" role="button" aria-expanded="false" aria-controls="desc-<?php echo $v['id']; ?>">Read more</a>
+                                </div>
+                                <div class="collapse mt-3" id="desc-<?php echo $v['id']; ?>">
+                                    <div class="card card-body border-0 shadow-sm rounded-4 text-muted p-4" style="background: #f8fafc;">
+                                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-clipboard-list me-2"></i> Work Types Involved</h6>
+                                        <p class="mb-3"><?php echo $work_info; ?></p>
+                                        
+                                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-info-circle me-2"></i> Job Description</h6>
+                                        <p class="mb-0"><?php echo nl2br(htmlspecialchars($v['description'])); ?></p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="detail-item">
-                                <i class="fas fa-user-clock"></i> Full Time
-                            </div>
-                        </div>
 
                         <div class="job-footer">
                             <div class="salary-box">
