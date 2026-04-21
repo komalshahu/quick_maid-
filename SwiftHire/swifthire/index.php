@@ -1,3 +1,6 @@
+<?php
+// session_start(); // Session start left commented out as original
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

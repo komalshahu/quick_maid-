@@ -66,8 +66,11 @@ $stmt->close();
         .company-name { color: #6366f1; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px;}
         .job-meta span { background: #f4f6f9; color: #565674; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-right: 8px; display: inline-block; margin-bottom: 5px;}
         
-        .btn-apply { background: white; color: #6366f1; border: 2px solid #6366f1; font-weight: 600; border-radius: 10px; padding: 8px 25px; transition: all 0.2s; text-decoration: none;}
+        .btn-apply { background: white; color: #6366f1; border: 2px solid #6366f1; font-weight: 600; border-radius: 10px; padding: 8px 25px; transition: all 0.2s; text-decoration: none; margin-right: 8px;}
         .btn-apply:hover { background: #6366f1; color: white; }
+        .btn-chat { background: #10b981; color: white; border: 2px solid #10b981; font-weight: 600; border-radius: 10px; padding: 8px 25px; transition: all 0.2s; text-decoration: none; }
+        .btn-chat:hover { background: #059669; border-color: #059669; color: white; }
+        .button-group { display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
@@ -133,13 +136,15 @@ $stmt->close();
                                     <span><i class="fas fa-clock"></i> <?php echo htmlspecialchars($m['shift_preference']); ?></span>
                                     <span><i class="fas fa-rupee-sign"></i> <?php echo htmlspecialchars($m['expected_salary']); ?>/mo</span>
                                     <span><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($m['experience_years']); ?> Years Exp</span>
+                                    <span><i class="fas fa-utensils"></i> <?php echo isset($m['diet_preference']) ? htmlspecialchars($m['diet_preference']) : 'Any'; ?></span>
                                     <?php if($m['verification_status'] == 'Aadhar Verified' || $m['verification_status'] == 'Police Verified'): ?>
                                         <span class="text-success bg-white border border-success"><i class="fas fa-check-circle"></i> Verified</span>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         </div>
-                        <div>
+                        <div class="button-group">
+                            <a href="messages.php?user_id=<?php echo $m['user_id']; ?><?php echo $nomdi_param; ?>" class="btn btn-chat"><i class="fas fa-comments me-2"></i>Chat</a>
                             <a href="book_maid.php?id=<?php echo $m['id']; ?><?php echo $nomdi_param; ?>" class="btn btn-apply">Request Maid</a>
                         </div>
                     </div>

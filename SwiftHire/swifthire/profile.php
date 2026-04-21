@@ -23,6 +23,11 @@ $is_maid = ($maid !== null);
 $stmt->close();
 
 $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
+
+// Generate CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,6 +172,23 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
     <div class="row justify-content-center">
         <div class="col-lg-11">
             
+            <!-- Success/Error Messages -->
+            <?php if(isset($_SESSION['success'])): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <i class="fas fa-check-circle me-2"></i> <?php echo $_SESSION['success']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0.7);"></button>
+                </div>
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+            
+            <?php if(isset($_SESSION['error'])): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+                    <i class="fas fa-exclamation-circle me-2"></i> <?php echo $_SESSION['error']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0.7);"></button>
+                </div>
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
+            
             <!-- Hero Card -->
             <div class="glass-card p-0 overflow-hidden">
                 <div class="hero-banner"></div>
@@ -205,7 +227,7 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                             </div>
                         </div>
                         <div class="col-md-5 text-md-end mt-4 mt-md-0">
-                            <a href="#" class="btn-premium"><i class="fas fa-edit me-2"></i> Update Portfolio</a>
+                            <button class="btn-premium" data-bs-toggle="modal" data-bs-target="#updateProfileModal"><i class="fas fa-edit me-2"></i> Update Profile</button>
                         </div>
                     </div>
                 </div>
@@ -283,6 +305,10 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                             <label class="stat-label">Availability</label>
                             <div class="fw-bold text-success">Active / Available</div>
                         </div>
+                        <div class="mb-3">
+                            <label class="stat-label">Diet Preference</label>
+                            <div class="fw-bold"><i class="fas fa-utensils text-warning me-1"></i> <?php echo $is_maid ? (isset($maid['diet_preference']) ? $maid['diet_preference'] : 'Any') : 'Not Specified'; ?></div>
+                        </div>
                         <div class="mb-0">
                             <label class="stat-label">Service Area</label>
                             <div class="fw-bold"><i class="fas fa-map-marker-alt text-danger me-1"></i> <?php echo $is_maid ? $maid['location_area'] : 'Unknown'; ?></div>
@@ -305,6 +331,78 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
         </div>
     </div>
 </div>
+
+<!-- Update Profile Modal -->
+<div class="modal fade" id="updateProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;">
+            <div class="modal-header border-0 pb-2">
+                <h5 class="modal-title text-white fw-bold"><i class="fas fa-user-edit me-2 text-primary"></i> Update Your Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="updateProfileForm" method="POST" action="update_profile.php">
+                <div class="modal-body px-4 py-4">
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-white fw-500 mb-2">First Name</label>
+                            <input type="text" class="form-control" name="firstname" value="<?php echo $first; ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white fw-500 mb-2">Last Name</label>
+                            <input type="text" class="form-control" name="lastname" value="<?php echo $last; ?>" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-white fw-500 mb-2">Email Address</label>
+                            <input type="email" class="form-control" name="email" value="<?php echo $email; ?>" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">
+                        <i class="fas fa-save me-2"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-content .form-control {
+        background: rgba(248, 250, 252, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f8fafc;
+        padding: 0.9rem 1.2rem;
+        border-radius: 12px;
+    }
+    
+    .modal-content .form-control:focus {
+        background: rgba(248, 250, 252, 0.15);
+        border-color: rgba(99, 102, 241, 0.5);
+        color: #f8fafc;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+    
+    .modal-content .form-label {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -2,9 +2,12 @@
 session_start();
 require 'db.php';
 
-if (isset($_SESSION['user_id'])) {
-    header("Location: user_dashboard.php");
-    exit;
+if (isset($_SESSION['user_id']) || isset($_SESSION['admin_logged_in'])) {
+    // If a user navigates manually to the login page while signed in, 
+    // destroy their active session so they can securely log in again.
+    session_unset();
+    session_destroy();
+    session_start(); // Need to restart a clean session for CSRF/login processing
 }
 
 $error = '';

@@ -14,6 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
     $category = $_POST['service_category'];
     $shift = $_POST['shift_preference'];
+    $diet = $_POST['diet_preference'];
     $salary = $_POST['expected_salary'];
     $experience = $_POST['experience_years'];
     $location = htmlspecialchars($_POST['location_area']);
@@ -39,8 +40,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($errors)) {
         // Insert into maids
-        $stmt = $conn->prepare("INSERT INTO maids (user_id, service_category, shift_preference, expected_salary, experience_years, location_area) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("issiis", $user_id, $category, $shift, $salary, $experience, $location);
+        $stmt = $conn->prepare("INSERT INTO maids (user_id, service_category, shift_preference, expected_salary, experience_years, location_area, diet_preference) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("issiiss", $user_id, $category, $shift, $salary, $experience, $location, $diet);
         
         if ($stmt->execute()) {
             $success = "You are now registered as a Service Provider (Maid)! Your verification is Pending.";
@@ -204,9 +205,19 @@ $nomdi_param = $hide_nav ? '?nomdi=1' : '';
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">Location / Area</label>
-                <input type="text" name="location_area" class="form-control" placeholder="e.g. Andheri West" required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">Location / Area</label>
+                    <input type="text" name="location_area" class="form-control" placeholder="e.g. Andheri West" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">Diet Preference</label>
+                    <select name="diet_preference" class="form-select" required>
+                        <option value="Any">Any / No Preference</option>
+                        <option value="Vegetarian">Strictly Vegetarian</option>
+                        <option value="Non-Vegetarian">Non-Vegetarian</option>
+                    </select>
+                </div>
             </div>
             
             <div class="section-title">Safety & Verification</div>

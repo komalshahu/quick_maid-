@@ -15,7 +15,18 @@ $keyword = $_GET['search'] ?? '';
 $category = $_GET['category'] ?? '';
 $location = $_GET['location'] ?? '';
 
-$query = "SELECT * FROM vacancies WHERE country = 'India'";
+// Detect whether vacancies table has a user_id column to join poster info
+$has_user_id = false;
+$col_check = $conn->query("SHOW COLUMNS FROM vacancies LIKE 'user_id'");
+if ($col_check && $col_check->num_rows > 0) {
+    $has_user_id = true;
+}
+
+if ($has_user_id) {
+    $query = "SELECT v.*, u.id AS poster_user_id, u.firstname, u.lastname FROM vacancies v LEFT JOIN users u ON v.user_id = u.id WHERE v.country = 'India'";
+} else {
+    $query = "SELECT v.*, NULL AS poster_user_id, NULL AS firstname, NULL AS lastname FROM vacancies v WHERE v.country = 'India'";
+}
 $params = [];
 $types = "";
 
@@ -287,6 +298,32 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
             color: white;
             box-shadow: 0 10px 20px var(--primary-glow);
         }
+        
+        .btn-chat-owner {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-chat-owner:hover {
+            background: #059669;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.25);
+            color: white;
+            text-decoration: none;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -397,6 +434,16 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
                                 <div class="detail-item">
                                     <i class="fas fa-calendar-alt"></i> <?php echo htmlspecialchars($v['working_days']); ?>
                                 </div>
+                                <?php if(isset($v['home_type']) && !empty($v['home_type'])): ?>
+                                <div class="detail-item" title="Post Owner's Home Diet Type">
+                                    <i class="fas fa-home"></i> <?php echo htmlspecialchars($v['home_type']); ?> Home
+                                </div>
+                                <?php endif; ?>
+                                <?php if(isset($v['maid_preference']) && !empty($v['maid_preference'])): ?>
+                                <div class="detail-item" title="Required Maid Diet Preference">
+                                    <i class="fas fa-utensils"></i> Maid: <?php echo htmlspecialchars($v['maid_preference']); ?>
+                                </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="mb-3 px-1">
@@ -434,9 +481,16 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
                                 <small>Monthly Package</small>
                                 <div class="salary-text"><?php echo htmlspecialchars($v['salary_range']); ?></div>
                             </div>
-                            <a href="apply.php?job=<?php echo urlencode($v['job_title']); ?><?php echo $nomdi_param; ?>" class="btn-apply-job border-0">
-                                Apply Now <i class="fas fa-external-link-alt ms-2"></i>
-                            </a>
+                            <div class="job-actions">
+                                <?php if(isset($v['poster_user_id']) && !empty($v['poster_user_id']) && $v['poster_user_id'] > 0): ?>
+                                    <a href="messages.php?user_id=<?php echo $v['poster_user_id']; ?><?php echo $nomdi_param; ?>" class="btn-chat-owner" title="Chat with <?php echo htmlspecialchars($v['firstname'] . ' ' . $v['lastname']); ?>">
+                                        <i class="fas fa-comments"></i> Chat Owner
+                                    </a>
+                                <?php endif; ?>
+                                <a href="apply.php?job=<?php echo urlencode($v['job_title']); ?><?php echo $nomdi_param; ?>" class="btn-apply-job">
+                                    Apply Now <i class="fas fa-external-link-alt ms-2"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
