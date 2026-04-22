@@ -514,24 +514,13 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
                                 <div class="salary-text"><?php echo htmlspecialchars($v['salary_range']); ?></div>
                             </div>
                             <div class="job-actions">
-                                <?php if(isset($v['poster_user_id']) && !empty($v['poster_user_id']) && $v['poster_user_id'] > 0): ?>
-                                    <button
-                                        type="button"
-                                        class="btn-chat-owner btn-open-chat"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#chatOwnerModal"
-                                        data-owner-id="<?php echo (int)$v['poster_user_id']; ?>"
-                                        data-owner-name="<?php echo htmlspecialchars(trim($v['firstname'] . ' ' . $v['lastname'])); ?>"
-                                        data-job-id="<?php echo (int)$v['id']; ?>"
-                                        title="Chat with <?php echo htmlspecialchars(trim($v['firstname'] . ' ' . $v['lastname'])); ?>"
-                                    >
-                                        <i class="fas fa-comments"></i> Chat Owner
-                                    </button>
-                                <?php else: ?>
-                                    <button type="button" class="btn-chat-owner" disabled style="opacity:.6;cursor:not-allowed;" title="Owner not linked for this post">
-                                        <i class="fas fa-comments"></i> Chat Owner
-                                    </button>
-                                <?php endif; ?>
+                                <a
+                                    href="job_chat.php?job_id=<?php echo (int)$v['id']; ?><?php echo $hide_nav ? '&nomdi=1' : ''; ?>"
+                                    class="btn-chat-owner"
+                                    title="Chat with Owner"
+                                >
+                                    <i class="fas fa-comments"></i> Chat Owner
+                                </a>
                                 <a href="apply.php?job=<?php echo urlencode($v['job_title']); ?><?php echo $nomdi_param; ?>" class="btn-apply-job">
                                     Apply Now <i class="fas fa-external-link-alt ms-2"></i>
                                 </a>
@@ -545,179 +534,14 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
     </div>
 </div>
 
-<!-- Chat Modal -->
-<div class="modal fade" id="chatOwnerModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow-lg rounded-4">
-      <div class="modal-header border-0 pb-0">
-        <div>
-          <h5 class="modal-title fw-bold mb-1" id="chatOwnerTitle">Chat</h5>
-          <div class="text-muted small" id="chatOwnerSub">Real-time chat</div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body pt-3">
-        <div id="chatMessages" class="chat-messages mb-3"></div>
-        <div class="d-flex gap-2">
-          <input id="chatInput" type="text" class="form-control rounded-pill" placeholder="Type a message..." autocomplete="off" />
-          <button id="chatSendBtn" class="btn btn-primary rounded-pill px-4" type="button">
-            <i class="fas fa-paper-plane me-2"></i>Send
-          </button>
-        </div>
-        <div class="text-muted small mt-2" id="chatStatus" style="min-height: 18px;"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const CURRENT_USER_ID = <?php echo (int)$_SESSION['user_id']; ?>;
-  let chatPollTimer = null;
-  let activeChat = { ownerId: null, jobId: null, ownerName: '', sinceId: 0 };
-
-  const chatModalEl = document.getElementById('chatOwnerModal');
-  const chatMessagesEl = document.getElementById('chatMessages');
-  const chatInputEl = document.getElementById('chatInput');
-  const chatSendBtnEl = document.getElementById('chatSendBtn');
-  const chatTitleEl = document.getElementById('chatOwnerTitle');
-  const chatSubEl = document.getElementById('chatOwnerSub');
-  const chatStatusEl = document.getElementById('chatStatus');
-
-  function setChatStatus(text) {
-    if (chatStatusEl) chatStatusEl.textContent = text || '';
-  }
-
-  function scrollChatToBottom() {
-    if (!chatMessagesEl) return;
-    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-  }
-
-  function renderMessage(msg) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'd-flex mb-2 ' + ((parseInt(msg.sender_id, 10) === CURRENT_USER_ID) ? 'justify-content-end' : 'justify-content-start');
-
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble ' + ((parseInt(msg.sender_id, 10) === CURRENT_USER_ID) ? 'me' : 'them');
-    bubble.textContent = msg.message_text ?? '';
-
-    const time = document.createElement('div');
-    time.className = 'chat-time';
-    const ts = msg.timestamp ? new Date(msg.timestamp.replace(' ', 'T')) : null;
-    time.textContent = ts && !isNaN(ts.getTime()) ? ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-    const bubbleWrap = document.createElement('div');
-    bubbleWrap.appendChild(bubble);
-    bubbleWrap.appendChild(time);
-    wrapper.appendChild(bubbleWrap);
-    chatMessagesEl.appendChild(wrapper);
-  }
-
-  async function fetchMessages() {
-    if (!activeChat.ownerId || !activeChat.jobId) return;
-    try {
-      const url = new URL('fetch_messages.php', window.location.href);
-      url.searchParams.set('owner_id', activeChat.ownerId);
-      url.searchParams.set('job_id', activeChat.jobId);
-      if (activeChat.sinceId > 0) url.searchParams.set('since_id', activeChat.sinceId);
-
-      const res = await fetch(url.toString(), { credentials: 'same-origin' });
-      const data = await res.json();
-      if (!data.success) {
-        setChatStatus(data.error || 'Unable to load messages');
-        return;
-      }
-
-      if (data.owner && data.owner.name) {
-        activeChat.ownerName = data.owner.name;
-        chatTitleEl.textContent = 'Chat with ' + data.owner.name;
-        chatSubEl.textContent = 'Job ID: ' + activeChat.jobId;
-      }
-
-      if (Array.isArray(data.messages) && data.messages.length) {
-        data.messages.forEach(m => {
-          renderMessage(m);
-          activeChat.sinceId = Math.max(activeChat.sinceId, parseInt(m.id, 10) || activeChat.sinceId);
-        });
-        scrollChatToBottom();
-      }
-    } catch (e) {
-      setChatStatus('Unable to load messages');
-    }
-  }
-
-  async function sendMessage() {
-    const text = (chatInputEl.value || '').trim();
-    if (!text || !activeChat.ownerId || !activeChat.jobId) return;
-
-    chatSendBtnEl.disabled = true;
-    setChatStatus('Sending...');
-    try {
-      const form = new FormData();
-      form.append('receiver_id', activeChat.ownerId);
-      form.append('job_id', activeChat.jobId);
-      form.append('message_text', text);
-
-      const res = await fetch('send_message.php', {
-        method: 'POST',
-        body: form,
-        credentials: 'same-origin'
-      });
-
-      const data = await res.json();
-      if (data.success && data.message) {
-        chatInputEl.value = '';
-        setChatStatus('');
-        // Render immediately
-        if ((parseInt(data.message.id, 10) || 0) > activeChat.sinceId) {
-          renderMessage(data.message);
-          activeChat.sinceId = parseInt(data.message.id, 10) || activeChat.sinceId;
-          scrollChatToBottom();
-        }
-      } else {
-        setChatStatus(data.error || 'Failed to send');
-      }
-    } catch (e) {
-      setChatStatus('Network error');
-    } finally {
-      chatSendBtnEl.disabled = false;
-    }
-  }
-
-  document.querySelectorAll('.btn-open-chat').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeChat.ownerId = parseInt(btn.getAttribute('data-owner-id'), 10);
-      activeChat.ownerName = btn.getAttribute('data-owner-name') || 'Owner';
-      activeChat.jobId = parseInt(btn.getAttribute('data-job-id'), 10);
-      activeChat.sinceId = 0;
-
-      chatTitleEl.textContent = 'Chat with ' + activeChat.ownerName;
-      chatSubEl.textContent = 'Job ID: ' + activeChat.jobId;
-      setChatStatus('Loading...');
-      chatMessagesEl.innerHTML = '';
+  // Force reliable navigation inside iframe for chat links.
+  document.querySelectorAll('.btn-chat-owner[href]').forEach((link) => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.location.href = this.getAttribute('href');
     });
-  });
-
-  chatSendBtnEl.addEventListener('click', sendMessage);
-  chatInputEl.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-  });
-
-  chatModalEl.addEventListener('shown.bs.modal', async () => {
-    await fetchMessages();
-    setChatStatus('');
-    chatInputEl.focus();
-    if (chatPollTimer) clearInterval(chatPollTimer);
-    chatPollTimer = setInterval(fetchMessages, 2000);
-  });
-
-  chatModalEl.addEventListener('hidden.bs.modal', () => {
-    if (chatPollTimer) clearInterval(chatPollTimer);
-    chatPollTimer = null;
-    activeChat = { ownerId: null, jobId: null, ownerName: '', sinceId: 0 };
-    setChatStatus('');
-    chatMessagesEl.innerHTML = '';
-    chatInputEl.value = '';
   });
 </script>
 </body>

@@ -17,13 +17,25 @@ $job_id = isset($_POST['job_id']) ? (int)$_POST['job_id'] : 0;
 $message_text = isset($_POST['message_text']) ? trim((string)$_POST['message_text']) : '';
 $message_text = mb_substr($message_text, 0, 2000);
 
-if ($receiver_id <= 0 || $job_id <= 0 || $message_text === '') {
+if ($job_id <= 0 || $message_text === '') {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Missing fields']);
     exit;
 }
 
 // Ensure the job exists and belongs to the receiver (Owner)
+$has_user_id = false;
+$col_check = $conn->query("SHOW COLUMNS FROM vacancies LIKE 'user_id'");
+if ($col_check && $col_check->num_rows > 0) {
+    $has_user_id = true;
+}
+
+if (!$has_user_id) {
+    http_response_code(409);
+    echo json_encode(['success' => false, 'error' => 'Chat not available: vacancies.user_id missing. Run migrate_vacancies.php']);
+    exit;
+}
+
 $owner_stmt = $conn->prepare("SELECT user_id FROM vacancies WHERE id = ? LIMIT 1");
 $owner_stmt->bind_param("i", $job_id);
 $owner_stmt->execute();
@@ -31,11 +43,14 @@ $owner_res = $owner_stmt->get_result();
 $job_row = $owner_res ? $owner_res->fetch_assoc() : null;
 $owner_stmt->close();
 
-if (!$job_row || (int)$job_row['user_id'] !== $receiver_id) {
+if (!$job_row || (int)$job_row['user_id'] <= 0) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Invalid job/owner']);
     exit;
 }
+
+// Always use DB mapped owner for this job to avoid stale client ids.
+$receiver_id = (int)$job_row['user_id'];
 
 // Prevent chatting with self
 if ($sender_id === $receiver_id) {
