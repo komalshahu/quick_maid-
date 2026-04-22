@@ -16,14 +16,16 @@ $create_table_query = "CREATE TABLE IF NOT EXISTS messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sender_id INT NOT NULL,
     receiver_id INT NOT NULL,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    job_id INT NULL,
+    message_text TEXT NOT NULL,
+    `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_read INT DEFAULT 0,
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX(job_id),
     INDEX(sender_id),
     INDEX(receiver_id),
-    INDEX(created_at)
+    INDEX(`timestamp`)
 )";
 $conn->query($create_table_query);
 
@@ -37,14 +39,14 @@ $conversations_query = "
         u.firstname,
         u.lastname,
         u.email,
-        (SELECT message FROM messages WHERE 
+        (SELECT message_text FROM messages WHERE 
             (sender_id = ? AND receiver_id = u.id) OR 
             (sender_id = u.id AND receiver_id = ?)
-         ORDER BY created_at DESC LIMIT 1) as last_message,
-        (SELECT created_at FROM messages WHERE 
+         ORDER BY `timestamp` DESC LIMIT 1) as last_message,
+        (SELECT `timestamp` FROM messages WHERE 
             (sender_id = ? AND receiver_id = u.id) OR 
             (sender_id = u.id AND receiver_id = ?)
-         ORDER BY created_at DESC LIMIT 1) as last_message_time,
+         ORDER BY `timestamp` DESC LIMIT 1) as last_message_time,
         (SELECT COUNT(*) FROM messages WHERE sender_id = u.id AND receiver_id = ? AND is_read = 0) as unread_count
     FROM messages m
     JOIN users u ON (u.id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END)
@@ -78,7 +80,7 @@ if ($other_user_id) {
     $msg_stmt = $conn->prepare("
         SELECT * FROM messages 
         WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
-        ORDER BY created_at ASC
+        ORDER BY `timestamp` ASC
     ");
     $msg_stmt->bind_param("iiii", $current_user_id, $other_user_id, $other_user_id, $current_user_id);
     $msg_stmt->execute();
@@ -102,7 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     $receiver_id = intval($_POST['receiver_id']);
 
     if (!empty($message_text) && $receiver_id > 0) {
-        $insert_stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)");
+        // This page is not job-scoped, so leave job_id as NULL
+        $insert_stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, message_text) VALUES (?, ?, ?)");
         $insert_stmt->bind_param("iis", $current_user_id, $receiver_id, $message_text);
         
         if ($insert_stmt->execute()) {
@@ -441,10 +444,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
                     <div class="message <?php echo ($msg['sender_id'] == $current_user_id) ? 'own' : 'other'; ?>">
                         <div>
                             <div class="message-content">
-                                <?php echo htmlspecialchars($msg['message']); ?>
+                                <?php echo htmlspecialchars($msg['message_text']); ?>
                             </div>
                             <div class="message-time">
-                                <?php echo date('H:i', strtotime($msg['created_at'])); ?>
+                                <?php echo date('H:i', strtotime($msg['timestamp'])); ?>
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,71 @@
+<?php
+session_start();
+require 'db.php';
+require 'schema_bootstrap.php';
+
+header('Content-Type: application/json');
+
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit;
+}
+
+$sender_id = (int)$_SESSION['user_id'];
+$receiver_id = isset($_POST['receiver_id']) ? (int)$_POST['receiver_id'] : 0;
+$job_id = isset($_POST['job_id']) ? (int)$_POST['job_id'] : 0;
+$message_text = isset($_POST['message_text']) ? trim((string)$_POST['message_text']) : '';
+$message_text = mb_substr($message_text, 0, 2000);
+
+if ($receiver_id <= 0 || $job_id <= 0 || $message_text === '') {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Missing fields']);
+    exit;
+}
+
+// Ensure the job exists and belongs to the receiver (Owner)
+$owner_stmt = $conn->prepare("SELECT user_id FROM vacancies WHERE id = ? LIMIT 1");
+$owner_stmt->bind_param("i", $job_id);
+$owner_stmt->execute();
+$owner_res = $owner_stmt->get_result();
+$job_row = $owner_res ? $owner_res->fetch_assoc() : null;
+$owner_stmt->close();
+
+if (!$job_row || (int)$job_row['user_id'] !== $receiver_id) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Invalid job/owner']);
+    exit;
+}
+
+// Prevent chatting with self
+if ($sender_id === $receiver_id) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid receiver']);
+    exit;
+}
+
+$insert_stmt = $conn->prepare("
+    INSERT INTO messages (sender_id, receiver_id, job_id, message_text)
+    VALUES (?, ?, ?, ?)
+");
+$insert_stmt->bind_param("iiis", $sender_id, $receiver_id, $job_id, $message_text);
+
+if (!$insert_stmt->execute()) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Database error']);
+    $insert_stmt->close();
+    exit;
+}
+
+$new_id = $insert_stmt->insert_id;
+$insert_stmt->close();
+
+$fetch_stmt = $conn->prepare("SELECT id, sender_id, receiver_id, job_id, message_text, `timestamp` FROM messages WHERE id = ? LIMIT 1");
+$fetch_stmt->bind_param("i", $new_id);
+$fetch_stmt->execute();
+$msg_res = $fetch_stmt->get_result();
+$msg = $msg_res ? $msg_res->fetch_assoc() : null;
+$fetch_stmt->close();
+
+echo json_encode(['success' => true, 'message' => $msg]);
+?>
