@@ -92,7 +92,31 @@ if (!$owner_available || $owner_name === '') {
 
         <?php if (!$owner_available): ?>
             <div class="alert alert-warning m-3 mb-0">
-                This job post does not have a linked owner account yet, so chat is not available right now.
+                <p class="mb-2">This job post does not have a linked owner account yet, so chat is not available right now.</p>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <button id="claimJobBtn" class="btn btn-sm btn-success">
+                        <i class="fas fa-link me-1"></i>Link to My Account
+                    </button>
+                    <script>
+                    document.getElementById('claimJobBtn').addEventListener('click', async () => {
+                        try {
+                            const res = await fetch('claim_job.php', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                                body: 'job_id=<?php echo $job_id; ?>'
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                location.reload();
+                            } else {
+                                alert(data.error || 'Failed to link account.');
+                            }
+                        } catch (e) {
+                            alert('Network error.');
+                        }
+                    });
+                    </script>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
         <div id="chatMessages" class="chat-messages"></div>
