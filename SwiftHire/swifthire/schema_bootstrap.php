@@ -44,3 +44,19 @@ if ($col_job && $col_job->num_rows === 0) {
     $conn->query("ALTER TABLE messages ADD COLUMN job_id INT NOT NULL DEFAULT 0 AFTER receiver_id");
 }
 
+$conn->query("
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    message_body TEXT NOT NULL,
+    related_id INT DEFAULT 0,
+    is_read TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_type (type),
+    INDEX idx_read (is_read),
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+");
+

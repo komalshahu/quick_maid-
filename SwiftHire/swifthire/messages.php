@@ -104,14 +104,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     $receiver_id = intval($_POST['receiver_id']);
 
     if (!empty($message_text) && $receiver_id > 0) {
-        // This page is not job-scoped, so leave job_id as NULL
         $insert_stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, message_text) VALUES (?, ?, ?)");
         $insert_stmt->bind_param("iis", $current_user_id, $receiver_id, $message_text);
         
         if ($insert_stmt->execute()) {
+            $new_id = $insert_stmt->insert_id;
             $response['success'] = true;
             $response['message'] = htmlspecialchars($message_text);
             $response['time'] = date('H:i');
+            $response['id'] = $new_id;
+
+            // Notify receiver
+            $u_stmt = $conn->prepare("SELECT firstname FROM users WHERE id = ?");
+            $u_stmt->bind_param("i", $current_user_id);
+            $u_stmt->execute();
+            $u_res = $u_stmt->get_result()->fetch_assoc();
+            $sender_name = $u_res['firstname'] ?? 'Someone';
+            $u_stmt->close();
+
+            $notif_body = "New message from $sender_name: " . mb_substr($message_text, 0, 50) . (mb_strlen($message_text) > 50 ? '...' : '');
+            $n_stmt = $conn->prepare("INSERT INTO notifications (user_id, type, message_body) VALUES (?, 'message', ?)");
+            $n_stmt->bind_param("is", $receiver_id, $notif_body);
+            $n_stmt->execute();
+            $n_stmt->close();
         }
         $insert_stmt->close();
     }
@@ -119,6 +134,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     header('Content-Type: application/json');
     echo json_encode($response);
     exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'fetch') {
+    $last_id = isset($_GET['last_id']) ? intval($_GET['last_id']) : 0;
+    $receiver_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+    
+    if ($receiver_id > 0) {
+        $msg_stmt = $conn->prepare("
+            SELECT * FROM messages 
+            WHERE id > ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+            ORDER BY `timestamp` ASC
+        ");
+        $msg_stmt->bind_param("iiiii", $last_id, $current_user_id, $receiver_id, $receiver_id, $current_user_id);
+        $msg_stmt->execute();
+        $msg_result = $msg_stmt->get_result();
+        $new_messages = [];
+        while ($row = $msg_result->fetch_assoc()) {
+            $row['time'] = date('H:i', strtotime($row['timestamp']));
+            $row['safe_message'] = htmlspecialchars($row['message_text']);
+            $new_messages[] = $row;
+        }
+        $msg_stmt->close();
+        
+        $read_stmt = $conn->prepare("UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND is_read = 0 AND id > ?");
+        $read_stmt->bind_param("iii", $receiver_id, $current_user_id, $last_id);
+        $read_stmt->execute();
+        $read_stmt->close();
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'messages' => $new_messages]);
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -488,6 +535,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     const messagesBox = document.getElementById('messagesBox');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
+    
+    let lastMsgId = <?php echo !empty($messages) ? end($messages)['id'] : 0; ?>;
+    const receiverId = <?php echo $other_user_id ?? 'null'; ?>;
 
     function scrollToBottom() {
         if(messagesBox) {
@@ -495,9 +545,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         }
     }
 
+    function appendMessage(msgText, time, isOwn) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ' + (isOwn ? 'own' : 'other');
+        messageDiv.innerHTML = `
+            <div class="message-wrapper">
+                <div class="message-content">
+                    <span class="msg-text">${msgText}</span>
+                    <span class="message-time">${time}</span>
+                </div>
+            </div>
+        `;
+        messagesBox.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
     function sendMessage() {
         const message = messageInput.value.trim();
-        const receiverId = <?php echo $other_user_id ?? 'null'; ?>;
 
         if (!message || !receiverId) return;
 
@@ -512,22 +576,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         .then(response => response.json())
         .then(data => {
             if(data.success) {
-                // Add message to chat
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message own';
-                messageDiv.innerHTML = `
-                    <div class="message-wrapper">
-                        <div class="message-content">
-                            <span class="msg-text">${data.message}</span>
-                            <span class="message-time">${data.time}</span>
-                        </div>
-                    </div>
-                `;
-                messagesBox.appendChild(messageDiv);
+                appendMessage(data.message, data.time, true);
+                if (data.id) lastMsgId = Math.max(lastMsgId, data.id);
                 messageInput.value = '';
-                scrollToBottom();
             }
         });
+    }
+
+    function pollMessages() {
+        if (!receiverId) return;
+        
+        fetch(`messages.php?action=fetch&user_id=${receiverId}&last_id=${lastMsgId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.messages.length > 0) {
+                    data.messages.forEach(m => {
+                        const isOwn = (m.sender_id == <?php echo $current_user_id; ?>);
+                        appendMessage(m.safe_message, m.time, isOwn);
+                        lastMsgId = Math.max(lastMsgId, m.id);
+                    });
+                }
+            })
+            .catch(err => console.error(err));
     }
 
     if(sendBtn) {
@@ -537,7 +607,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         });
     }
 
-    window.addEventListener('load', scrollToBottom);
+    window.addEventListener('load', () => {
+        scrollToBottom();
+        if (receiverId) {
+            setInterval(pollMessages, 3000);
+        }
+    });
 </script>
 
 </body>

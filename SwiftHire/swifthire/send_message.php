@@ -49,11 +49,20 @@ if (!$job_row || (int)$job_row['user_id'] <= 0) {
     exit;
 }
 
-// Always use DB mapped owner for this job to avoid stale client ids.
-$receiver_id = (int)$job_row['user_id'];
+// Determine true receiver based on whether the sender is the job owner
+$job_owner_id = (int)$job_row['user_id'];
+$requested_receiver = isset($_POST['receiver_id']) ? (int)$_POST['receiver_id'] : 0;
 
-// Prevent chatting with self
-if ($sender_id === $receiver_id) {
+if ($sender_id === $job_owner_id) {
+    // Sender is owner, receiver must be the maid
+    $receiver_id = $requested_receiver;
+} else {
+    // Sender is maid, receiver must be the owner
+    $receiver_id = $job_owner_id;
+}
+
+// Prevent chatting with self or invalid receiver
+if ($sender_id === $receiver_id || $receiver_id <= 0) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Invalid receiver']);
     exit;
@@ -81,6 +90,20 @@ $fetch_stmt->execute();
 $msg_res = $fetch_stmt->get_result();
 $msg = $msg_res ? $msg_res->fetch_assoc() : null;
 $fetch_stmt->close();
+
+// Insert notification for the receiver
+$u_stmt = $conn->prepare("SELECT firstname FROM users WHERE id = ?");
+$u_stmt->bind_param("i", $sender_id);
+$u_stmt->execute();
+$u_res = $u_stmt->get_result()->fetch_assoc();
+$sender_name = $u_res['firstname'] ?? 'Someone';
+$u_stmt->close();
+
+$notif_body = "New message from $sender_name: " . mb_substr($message_text, 0, 50) . (mb_strlen($message_text) > 50 ? '...' : '');
+$n_stmt = $conn->prepare("INSERT INTO notifications (user_id, type, message_body, related_id) VALUES (?, 'message', ?, ?)");
+$n_stmt->bind_param("isi", $receiver_id, $notif_body, $job_id);
+$n_stmt->execute();
+$n_stmt->close();
 
 echo json_encode(['success' => true, 'message' => $msg]);
 ?>

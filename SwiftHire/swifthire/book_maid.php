@@ -40,6 +40,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $maid) {
         
         if ($stmt->execute()) {
             $success = "Booking request submitted successfully! The agency will schedule a trial shortly. Check your Dashboard.";
+            
+            // Notify Maid
+            $maid_user_id = $maid['user_id'];
+            $owner_name = $_SESSION['user_firstname'] ?? 'An Owner';
+            
+            $notif_msg = "You have a new booking request from $owner_name! Check your messages.";
+            $notif_stmt = $conn->prepare("INSERT INTO notifications (user_id, type, message_body) VALUES (?, 'request', ?)");
+            $notif_stmt->bind_param("is", $maid_user_id, $notif_msg);
+            $notif_stmt->execute();
+            $notif_stmt->close();
+
+            // Auto-init chat
+            $init_msg = "Hi! I have requested a booking with you starting on $start_date. Notes: $notes";
+            $msg_stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, job_id, message_text) VALUES (?, ?, 0, ?)");
+            $msg_stmt->bind_param("iis", $employer_id, $maid_user_id, $init_msg);
+            $msg_stmt->execute();
+            $msg_stmt->close();
         } else {
             $error = "Error: " . $conn->error;
         }

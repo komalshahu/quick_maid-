@@ -62,7 +62,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
 <nav class="navbar navbar-dark navbar-custom">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="owner_dashboard.php"><i class="fas fa-home me-2"></i> QuickMaid Owner</a>
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-3 align-items-center">
+            <?php include 'notifications_ui.php'; ?>
             <a href="owner_inbox.php" class="btn btn-outline-light rounded-pill px-4"><i class="fas fa-envelope"></i> Inbox</a>
             <a href="logout.php" class="btn btn-light text-dark rounded-pill px-4">Logout</a>
         </div>

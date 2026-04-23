@@ -169,6 +169,9 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                         <span class="stat-val"><?php echo $app_count; ?></span>
                         <span class="stat-label">Total Submissions</span>
                     </div>
+                    <div class="stat-item d-flex align-items-center bg-transparent border-0">
+                        <?php include 'notifications_ui.php'; ?>
+                    </div>
                 </div>
             </div>
 
@@ -183,6 +186,14 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                     $status_class = $isReview ? 'status-review' : 'status-received';
                     $status_text = $isReview ? 'In Review' : 'Received';
                     $status_icon = $isReview ? 'fa-spinner fa-spin' : 'fa-check-circle';
+                    
+                    // Add chat button if Accepted
+                    $chat_btn = '';
+                    if ($row['status'] === 'Accepted') {
+                        $status_class = 'status-received';
+                        $status_text = 'Accepted';
+                        $chat_btn = '<a href="messages.php" class="btn btn-primary btn-sm rounded-pill mt-3"><i class="fas fa-comments"></i> Chat with Owner</a>';
+                    }
                 ?>
                     <div class="col-12">
                         <div class="app-card">
@@ -219,6 +230,7 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                             <div class="message-box">
                                 "<?php echo htmlspecialchars($row['message']); ?>"
                             </div>
+                            <?php echo $chat_btn; ?>
                         </div>
                     </div>
                 <?php endwhile; ?>
@@ -236,6 +248,7 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 <?php 

@@ -52,7 +52,8 @@ $stmt->close();
 <nav class="navbar navbar-dark navbar-custom">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="owner_dashboard.php"><i class="fas fa-inbox me-2"></i> Owner Inbox</a>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
+            <?php include 'notifications_ui.php'; ?>
             <a href="owner_dashboard.php" class="btn btn-outline-light rounded-pill px-4">Dashboard</a>
             <a href="post_job.php" class="btn btn-primary rounded-pill px-4">Post a Job</a>
         </div>
