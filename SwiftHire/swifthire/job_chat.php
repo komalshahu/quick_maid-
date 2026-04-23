@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $current_user_id = (int)$_SESSION['user_id'];
+$maid_id = isset($_GET['maid_id']) ? (int)$_GET['maid_id'] : 0;
 $owner_id = isset($_GET['owner_id']) ? (int)$_GET['owner_id'] : 0;
 $job_id = isset($_GET['job_id']) ? (int)$_GET['job_id'] : 0;
 $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
@@ -53,9 +54,27 @@ if ($owner_available) {
     $owner_id = (int)$job['owner_user_id'];
 }
 
-$owner_name = trim((string)($job['firstname'] ?? '') . ' ' . (string)($job['lastname'] ?? ''));
-if (!$owner_available || $owner_name === '') {
-    $owner_name = 'Owner';
+$is_owner = ($current_user_id === $owner_id);
+$receiver_id = $is_owner ? $maid_id : $owner_id;
+
+$other_party_name = 'User';
+if ($is_owner) {
+    if ($maid_id > 0) {
+        $stmt = $conn->prepare("SELECT firstname, lastname FROM users WHERE id = ?");
+        $stmt->bind_param("i", $maid_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($res && $res->num_rows > 0) {
+            $r = $res->fetch_assoc();
+            $other_party_name = trim($r['firstname'] . ' ' . $r['lastname']);
+        }
+        $stmt->close();
+    }
+} else {
+    $other_party_name = trim((string)($job['firstname'] ?? '') . ' ' . (string)($job['lastname'] ?? ''));
+    if (!$owner_available || $other_party_name === '') {
+        $other_party_name = 'Owner';
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -84,10 +103,10 @@ if (!$owner_available || $owner_name === '') {
     <div class="chat-wrap shadow-sm">
         <div class="chat-header d-flex align-items-center justify-content-between">
             <div>
-                <div class="fw-bold"><i class="fas fa-comments me-2"></i>Chat with <?php echo htmlspecialchars($owner_name); ?></div>
+                <div class="fw-bold"><i class="fas fa-comments me-2"></i>Chat with <?php echo htmlspecialchars($other_party_name); ?></div>
                 <div class="small opacity-75">Job: <?php echo htmlspecialchars($job['job_title']); ?> (ID: <?php echo (int)$job_id; ?>)</div>
             </div>
-            <a class="btn btn-sm btn-light" href="maid_vacancies.php<?php echo $hide_nav ? '?nomdi=1' : ''; ?>">
+            <a class="btn btn-sm btn-light" href="javascript:history.back()">
                 <i class="fas fa-arrow-left me-1"></i>Back
             </a>
         </div>
@@ -136,7 +155,7 @@ if (!$owner_available || $owner_name === '') {
 
 <script>
 const CURRENT_USER_ID = <?php echo $current_user_id; ?>;
-const OWNER_ID = <?php echo (int)$owner_id; ?>;
+const RECEIVER_ID = <?php echo (int)$receiver_id; ?>;
 const JOB_ID = <?php echo $job_id; ?>;
 const OWNER_AVAILABLE = <?php echo $owner_available ? 'true' : 'false'; ?>;
 let sinceId = 0;
@@ -181,7 +200,7 @@ async function fetchMessages() {
     if (!OWNER_AVAILABLE) return;
     try {
         const u = new URL('fetch_messages.php', window.location.href);
-        u.searchParams.set('owner_id', OWNER_ID);
+        u.searchParams.set('owner_id', RECEIVER_ID);
         u.searchParams.set('job_id', JOB_ID);
         if (sinceId > 0) u.searchParams.set('since_id', sinceId);
 
@@ -213,7 +232,7 @@ async function sendMessage() {
     setStatus('Sending...');
     try {
         const form = new FormData();
-        form.append('receiver_id', OWNER_ID);
+        form.append('receiver_id', RECEIVER_ID);
         form.append('job_id', JOB_ID);
         form.append('message_text', text);
 

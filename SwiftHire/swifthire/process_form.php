@@ -28,7 +28,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     $address = $_POST['address'] ?? '';
     $address2 = $_POST['address2'] ?? '';
     $message = $_POST['message'] ?? '';
-    $resume_path = $_FILES['resume']['tmp_name'] ?? '';
+    $job_id = $_POST['job_id'] ?? 0;
+    
+    // Handle File Upload
+    $resume_path = '';
+    if (isset($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = 'uploads/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        $file_extension = pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION);
+        $new_filename = uniqid('resume_', true) . '.' . $file_extension;
+        $dest_path = $upload_dir . $new_filename;
+        
+        if (move_uploaded_file($_FILES['resume']['tmp_name'], $dest_path)) {
+            $resume_path = $dest_path;
+        }
+    }
 
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -63,8 +79,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     }
 
     // Insert data into database
-    $stmt = $conn->prepare("INSERT INTO job_applications (user_id, firstname, lastname, email, gender, areacode, phone, age, startdate, address, address2, message, resume_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("issssssisssss", $user_id, $firstname, $lastname, $email, $gender, $areacode, $phone, $age, $startdate, $address, $address2, $message, $resume_path);
+    $stmt = $conn->prepare("INSERT INTO job_applications (user_id, job_id, firstname, lastname, email, gender, areacode, phone, age, startdate, address, address2, message, resume_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("iissssssisssss", $user_id, $job_id, $firstname, $lastname, $email, $gender, $areacode, $phone, $age, $startdate, $address, $address2, $message, $resume_path);
     $stmt->execute();
     $stmt->close();
     $conn->close();

@@ -221,7 +221,7 @@ if (empty($_SESSION['csrf_token'])) {
                                     <span class="stat-label">Asking Salary</span>
                                 </div>
                                 <div class="stat-box">
-                                    <span class="stat-value">5.0</span>
+                                    <span class="stat-value"><?php echo $is_maid ? number_format($maid['rating'], 1) : 'N/A'; ?></span>
                                     <span class="stat-label">Rating</span>
                                 </div>
                             </div>
@@ -240,19 +240,37 @@ if (empty($_SESSION['csrf_token'])) {
                     <div class="glass-card">
                         <h2 class="section-title"><i class="fas fa-user-tie"></i> Professional Bio</h2>
                         <p class="text-secondary" style="line-height: 1.8;">
-                            Dedicated professional listed on the QuickMaid premium network. Committed to excellence in household management, ensuring a spotless environment and high-quality service standards. Vetted for reliability and performance.
+                            <?php 
+                            if ($is_maid && !empty($maid['bio'])) {
+                                echo nl2br(htmlspecialchars($maid['bio']));
+                            } else {
+                                echo "Dedicated professional listed on the QuickMaid premium network. Committed to excellence in household management, ensuring a spotless environment and high-quality service standards. Vetted for reliability and performance.";
+                            }
+                            ?>
                         </p>
                     </div>
 
                     <div class="glass-card">
                         <h2 class="section-title"><i class="fas fa-tools"></i> Verified Skills</h2>
                         <div>
-                            <span class="pill-tag">Deep Cleaning</span>
-                            <span class="pill-tag">Laundry & Pressing</span>
-                            <span class="pill-tag">Meal Preparation</span>
-                            <span class="pill-tag">Sanitization</span>
-                            <span class="pill-tag">Child Safety</span>
-                            <span class="pill-tag">Organization</span>
+                            <?php 
+                            if ($is_maid && !empty($maid['skills'])) {
+                                $skills_array = explode(',', $maid['skills']);
+                                foreach ($skills_array as $skill) {
+                                    $skill = trim($skill);
+                                    if (!empty($skill)) {
+                                        echo '<span class="pill-tag">' . htmlspecialchars($skill) . '</span>';
+                                    }
+                                }
+                            } else {
+                            ?>
+                                <span class="pill-tag">Deep Cleaning</span>
+                                <span class="pill-tag">Laundry & Pressing</span>
+                                <span class="pill-tag">Meal Preparation</span>
+                                <span class="pill-tag">Sanitization</span>
+                                <span class="pill-tag">Child Safety</span>
+                                <span class="pill-tag">Organization</span>
+                            <?php } ?>
                         </div>
                     </div>
 
@@ -357,6 +375,16 @@ if (empty($_SESSION['csrf_token'])) {
                             <label class="form-label text-white fw-500 mb-2">Email Address</label>
                             <input type="email" class="form-control" name="email" value="<?php echo $email; ?>" required>
                         </div>
+                        <?php if($is_maid): ?>
+                        <div class="col-12 mt-3">
+                            <label class="form-label text-white fw-500 mb-2">Professional Bio</label>
+                            <textarea class="form-control" name="bio" rows="3" placeholder="Tell owners about yourself..."><?php echo htmlspecialchars($maid['bio'] ?? ''); ?></textarea>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <label class="form-label text-white fw-500 mb-2">Skills (comma separated)</label>
+                            <input type="text" class="form-control" name="skills" value="<?php echo htmlspecialchars($maid['skills'] ?? ''); ?>" placeholder="e.g. Deep Cleaning, Cooking, Babysitting">
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-2">

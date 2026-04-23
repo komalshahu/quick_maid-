@@ -78,11 +78,16 @@ $stmt->close();
 <?php if(!$hide_nav): ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">QuickMaid Portal</a>
+    <a class="navbar-brand" href="<?php echo (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'owner') ? 'owner_dashboard.php' : 'index.php'; ?>">QuickMaid Portal</a>
     <div class="d-flex">
-        <a href="user_dashboard.php" class="btn btn-outline-light me-2">Dashboard</a>
-        <a href="register_maid.php" class="btn btn-warning me-2 fw-bold text-dark">Register as Maid</a>
-        <a href="user_logout.php" class="btn btn-danger">Logout</a>
+        <?php if(isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'owner'): ?>
+            <a href="owner_dashboard.php" class="btn btn-outline-light me-2">Dashboard</a>
+            <a href="owner_jobs.php" class="btn btn-outline-light me-2">My Job Posts</a>
+        <?php else: ?>
+            <a href="user_dashboard.php" class="btn btn-outline-light me-2">Dashboard</a>
+            <a href="register_maid.php" class="btn btn-warning me-2 fw-bold text-dark">Register as Maid</a>
+        <?php endif; ?>
+        <a href="logout.php" class="btn btn-danger">Logout</a>
     </div>
   </div>
 </nav>

@@ -371,12 +371,17 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
 <?php if(!$hide_nav): ?>
 <nav class="navbar navbar-expand-lg navbar-dark" style="background: #0f172a;">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php">
+        <a class="navbar-brand fw-bold" href="<?php echo (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'owner') ? 'owner_dashboard.php' : 'index.php'; ?>">
             <img src="images/logo.png" alt="Logo" width="30" height="30" class="me-2"> QuickMaid
         </a>
         <div class="ms-auto d-flex align-items-center gap-3">
-            <a href="mdi_main.php" class="btn btn-outline-light btn-sm rounded-pill px-3">Main Workspace</a>
-            <a href="user_dashboard.php" class="btn btn-primary btn-sm rounded-pill px-3">My Applications</a>
+            <?php if(isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'owner'): ?>
+                <a href="owner_dashboard.php" class="btn btn-outline-light btn-sm rounded-pill px-3">Owner Dashboard</a>
+                <a href="owner_jobs.php" class="btn btn-primary btn-sm rounded-pill px-3">My Job Posts</a>
+            <?php else: ?>
+                <a href="mdi_main.php" class="btn btn-outline-light btn-sm rounded-pill px-3">Main Workspace</a>
+                <a href="user_dashboard.php" class="btn btn-primary btn-sm rounded-pill px-3">My Applications</a>
+            <?php endif; ?>
         </div>
     </div>
 </nav>
@@ -521,8 +526,8 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
                                 >
                                     <i class="fas fa-comments"></i> Chat Owner
                                 </a>
-                                <a href="apply.php?job=<?php echo urlencode($v['job_title']); ?><?php echo $nomdi_param; ?>" class="btn-apply-job">
-                                    Apply Now <i class="fas fa-external-link-alt ms-2"></i>
+                                <a href="apply.php?job_id=<?php echo (int)$v['id']; ?>&job=<?php echo urlencode($v['job_title']); ?><?php echo $hide_nav ? '&nomdi=1' : ''; ?>" class="btn-apply-job" id="btn-apply-<?php echo (int)$v['id']; ?>">
+                                    Apply Now <i class="fas fa-paper-plane ms-2"></i>
                                 </a>
                             </div>
                         </div>
@@ -537,7 +542,7 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // Force reliable navigation inside iframe for chat links.
-  document.querySelectorAll('.btn-chat-owner[href]').forEach((link) => {
+  document.querySelectorAll('.btn-chat-owner[href], .btn-apply-job[href]').forEach((link) => {
     link.addEventListener('click', function (e) {
       e.preventDefault();
       window.location.href = this.getAttribute('href');

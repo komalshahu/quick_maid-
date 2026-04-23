@@ -11,6 +11,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = htmlspecialchars($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
+    $user_type = isset($_POST['user_type']) && $_POST['user_type'] === 'maid' ? 'maid' : 'owner';
+
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -20,16 +22,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Email already registered!";
     } else {
         $stmt->close();
-        $stmt = $conn->prepare("INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $firstname, $lastname, $email, $password);
+        $stmt = $conn->prepare("INSERT INTO users (firstname, lastname, email, password, user_type) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $firstname, $lastname, $email, $password, $user_type);
         if ($stmt->execute()) {
-            $success = "Registration successful! You can now <a href='login.php' style='color:#15803d; text-decoration:underline;'>log in here</a>.";
+            $new_user_id = $stmt->insert_id;
+            $_SESSION['user_id'] = $new_user_id;
+            $_SESSION['user_firstname'] = $firstname;
+            $_SESSION['user_lastname'] = $lastname;
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_type'] = $user_type;
+
+            if ($user_type === 'owner') {
+                header("Location: owner_dashboard.php");
+                exit;
+            } else {
+                header("Location: splash.php");
+                exit;
+            }
         } else {
             $error = "Error: " . $conn->error;
         }
     }
     if(isset($stmt)) $stmt->close();
 }
+
+$default_user_type = isset($_GET['user_type']) && $_GET['user_type'] === 'maid' ? 'maid' : 'owner';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -153,10 +170,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">Email Address</label>
                 <input type="email" name="email" class="form-control" placeholder="john@example.com" required>
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">Create Password</label>
                 <input type="password" name="password" class="form-control" placeholder="••••••••" required>
             </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">I want to</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="user_type" id="typeClient" value="owner" <?php echo $default_user_type === 'owner' ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="typeClient">Hire a Maid</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="user_type" id="typeMaid" value="maid" <?php echo $default_user_type === 'maid' ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="typeMaid">Work as a Maid</label>
+                    </div>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary w-100">Create Account <i class="fas fa-rocket ms-2"></i></button>
         </form>
         

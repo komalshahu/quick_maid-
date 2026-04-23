@@ -1,5 +1,5 @@
 <?php
-// session_start(); // Session start left commented out as original
+session_start();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -318,7 +318,7 @@
         </a>
         <div class="d-flex gap-3">
             <a href="login.php" class="btn btn-portal px-4 rounded-pill">Log In</a>
-            <a href="register.php" class="btn btn-apply px-4 rounded-pill">Sign Up</a>
+            <a href="register.php?user_type=maid" class="btn btn-apply px-4 rounded-pill">Sign Up</a>
         </div>
     </div>
 </nav>
@@ -348,8 +348,8 @@
                 <p>Welcome to QuickMaid. The premier platform connecting you with thoroughly vetted, top-rated professional maids for spotless cleaning and dedicated household support.</p>
                 
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="job_board.php" class="btn btn-custom btn-apply"><i class="fas fa-search"></i> Book a Maid</a>
-                    <a href="register_maid.php" class="btn btn-custom btn-portal"><i class="fas fa-hands-holding-circle"></i> Join as a Maid</a>
+                    <a href="register.php?user_type=maid" class="btn btn-custom btn-portal"><i class="fas fa-hands-holding-circle"></i> Join as a Maid</a>
+                    <a href="register.php?user_type=owner" class="btn btn-custom btn-apply"><i class="fas fa-user-tie"></i> Hire a Maid - Sign Up</a>
                 </div>
                 
                 <div class="stats-row">

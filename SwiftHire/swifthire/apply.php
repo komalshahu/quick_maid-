@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 $token = bin2hex(random_bytes(32));
 $_SESSION['csrf_token'] = $token;
 $job_title = isset($_GET['job']) ? htmlspecialchars($_GET['job']) : "General Application";
+$job_id = isset($_GET['job_id']) ? (int)$_GET['job_id'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -169,6 +170,7 @@ $job_title = isset($_GET['job']) ? htmlspecialchars($_GET['job']) : "General App
                 
                 <input type="hidden" name="csrf_token" value="<?php echo $token; ?>">
                 <input type="hidden" name="nomdi" value="<?php echo $hide_nav ? '1' : '0'; ?>">
+                <input type="hidden" name="job_id" value="<?php echo $job_id; ?>">
                 
                 <button type="submit" name="submit" class="btn-apply"><i class="fas fa-paper-plane me-2"></i> Submit Application</button>
             </form>

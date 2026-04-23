@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = htmlspecialchars($_POST['email']);
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT id, firstname, lastname, password FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id, firstname, lastname, password, user_type FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -27,7 +27,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_firstname'] = $row['firstname'];
             $_SESSION['user_lastname'] = $row['lastname'];
             $_SESSION['user_email'] = $email;
-            header("Location: splash.php");
+            $_SESSION['user_type'] = $row['user_type'];
+            
+            if ($row['user_type'] === 'owner') {
+                header("Location: owner_dashboard.php");
+            } else {
+                header("Location: splash.php");
+            }
             exit;
         } else {
             $error = "Invalid password.";

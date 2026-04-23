@@ -22,6 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $firstname = isset($_POST['firstname']) ? htmlspecialchars(trim($_POST['firstname'])) : '';
     $lastname = isset($_POST['lastname']) ? htmlspecialchars(trim($_POST['lastname'])) : '';
     $email = isset($_POST['email']) ? htmlspecialchars(trim($_POST['email'])) : '';
+    $bio = isset($_POST['bio']) ? htmlspecialchars(trim($_POST['bio'])) : '';
+    $skills = isset($_POST['skills']) ? htmlspecialchars(trim($_POST['skills'])) : '';
     
     // Validate inputs
     if (empty($firstname) || empty($lastname) || empty($email)) {
@@ -59,6 +61,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['user_firstname'] = $firstname;
         $_SESSION['user_lastname'] = $lastname;
         $_SESSION['user_email'] = $email;
+        
+        // Update maid profile if applicable
+        if (isset($_POST['bio']) || isset($_POST['skills'])) {
+            $stmt_maid = $conn->prepare("UPDATE maids SET bio = ?, skills = ? WHERE user_id = ?");
+            $stmt_maid->bind_param("ssi", $bio, $skills, $user_id);
+            $stmt_maid->execute();
+            $stmt_maid->close();
+        }
         
         $_SESSION['success'] = "Profile updated successfully!";
     } else {
