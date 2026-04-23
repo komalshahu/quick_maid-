@@ -169,9 +169,6 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                         <span class="stat-val"><?php echo $app_count; ?></span>
                         <span class="stat-label">Total Submissions</span>
                     </div>
-                    <div class="stat-item d-flex align-items-center bg-transparent border-0">
-                        <?php include 'notifications_ui.php'; ?>
-                    </div>
                 </div>
             </div>
 

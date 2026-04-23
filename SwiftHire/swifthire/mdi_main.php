@@ -108,10 +108,11 @@ $name = $is_admin ? "Administrator" : htmlspecialchars($_SESSION['user_firstname
         </div>
         <div class="d-flex align-items-center gap-4">
             <span class="text-muted small fw-semibold d-none d-md-block" id="liveClock">Loading time. . .</span>
-            <div class="position-relative" style="cursor:pointer;" title="Notifications" onclick="showNotifications()">
-                <i class="fas fa-bell bell-ringing" style="color:#a1a5b7; font-size:1.2rem; transition: color 0.2s;" onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color='#a1a5b7'"></i>
-                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width:10px; height:10px;"></span>
-            </div>
+            <?php 
+                $notif_btn_class = 'btn-outline-secondary border-0';
+                $ring_bell = true;
+                include 'notifications_ui.php'; 
+            ?>
         </div>
     </div>
     <div class="mdi-container">
@@ -161,72 +162,8 @@ $name = $is_admin ? "Administrator" : htmlspecialchars($_SESSION['user_firstname
     setInterval(updateClock, 1000);
     updateClock();
 
-    function showNotifications() {
-        Swal.fire({
-            html: `
-                <div style="text-align: left; font-family: 'Outfit', sans-serif;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
-                        <h5 style="font-weight:700; color:#0f172a; margin:0;">Recent Notifications</h5>
-                        <span style="background: #eef2ff; color: #4f46e5; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">3 New</span>
-                    </div>
-
-                    <div style="padding: 12px; background:#fff; border: 1px solid #f1f5f9; border-radius:12px; margin-bottom:12px; display:flex; align-items:start; transition: all 0.2s;">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: #10b981; display:flex; align-items:center; justify-content:center; margin-right:15px; flex-shrink:0;">
-                            <i class="fas fa-check-shield" style="font-size:1.2rem;"></i>
-                        </div>
-                        <div style="flex-grow: 1;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">Profile Verified Successfully</div>
-                                <span style="font-size:0.7rem; color:#94a3b8;">2m ago</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:#64748b; line-height:1.4; margin-top:2px;">Your Aadhar & Identity checks are complete. You now have a "Verified" badge on your profile.</div>
-                        </div>
-                    </div>
-
-                    <div style="padding: 12px; background:#fff; border: 1px solid #f1f5f9; border-radius:12px; margin-bottom:12px; display:flex; align-items:start;">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(79, 70, 229, 0.1); color: #4f46e5; display:flex; align-items:center; justify-content:center; margin-right:15px; flex-shrink:0;">
-                            <i class="fas fa-briefcase" style="font-size:1.1rem;"></i>
-                        </div>
-                        <div style="flex-grow: 1;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">New Vacancies in India</div>
-                                <span style="font-size:0.7rem; color:#94a3b8;">1h ago</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:#64748b; line-height:1.4; margin-top:2px;">17 new premium positions are now available in the Job Openings across India.</div>
-                        </div>
-                    </div>
-
-                    <div style="padding: 12px; background:#fff; border: 1px solid #f1f5f9; border-radius:12px; display:flex; align-items:start;">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; display:flex; align-items:center; justify-content:center; margin-right:15px; flex-shrink:0;">
-                            <i class="fas fa-calendar-clock" style="font-size:1.1rem;"></i>
-                        </div>
-                        <div style="flex-grow: 1;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">Trial Session Reminder</div>
-                                <span style="font-size:0.7rem; color:#94a3b8;">3h ago</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:#64748b; line-height:1.4; margin-top:2px;">Don't forget your scheduled trial with Gupta Residence tomorrow at 10:00 AM.</div>
-                        </div>
-                    </div>
-                </div>
-            `,
-            showConfirmButton: true,
-            confirmButtonText: 'Mark all as read',
-            confirmButtonColor: '#4f46e5',
-            width: 400,
-            position: 'top-end',
-            backdrop: false,
-            showCloseButton: true,
-            customClass: { popup: 'shadow-lg border border-light' }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // If they click mark read, stop the animation and hide the red dot
-                document.querySelector('.bell-ringing').classList.remove('bell-ringing');
-                document.querySelector('.bg-danger.rounded-circle').style.display = 'none';
-            }
-        });
-    }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
