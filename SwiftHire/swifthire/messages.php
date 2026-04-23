@@ -304,28 +304,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         }
 
         .message-content {
-            max-width: 60%;
-            padding: 0.8rem 1.2rem;
-            border-radius: 16px;
+            max-width: 100%; /* controlled by wrapper */
+            padding: 8px 12px 10px 12px;
+            border-radius: 12px;
             word-wrap: break-word;
+            position: relative;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+        }
+        
+        .message-wrapper {
+            max-width: 75%;
+            display: flex;
         }
 
         .message.own .message-content {
-            background: linear-gradient(135deg, var(--primary), #7c3aed);
-            color: white;
-            border-bottom-right-radius: 4px;
+            background: #d9fdd3;
+            color: #111b21;
+            border-top-right-radius: 0;
         }
 
         .message.other .message-content {
-            background: rgba(255, 255, 255, 0.1);
-            color: #f8fafc;
-            border-bottom-left-radius: 4px;
+            background: #ffffff;
+            color: #111b21;
+            border-top-left-radius: 0;
+        }
+
+        .msg-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
         }
 
         .message-time {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 0.3rem;
+            font-size: 0.65rem;
+            color: #667781;
+            float: right;
+            margin-top: 10px;
+            margin-left: 12px;
+            line-height: 1;
         }
 
         /* Input Area */
@@ -442,12 +458,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
             <div class="messages-box" id="messagesBox">
                 <?php foreach($messages as $msg): ?>
                     <div class="message <?php echo ($msg['sender_id'] == $current_user_id) ? 'own' : 'other'; ?>">
-                        <div>
+                        <div class="message-wrapper">
                             <div class="message-content">
-                                <?php echo htmlspecialchars($msg['message_text']); ?>
-                            </div>
-                            <div class="message-time">
-                                <?php echo date('H:i', strtotime($msg['timestamp'])); ?>
+                                <span class="msg-text"><?php echo htmlspecialchars($msg['message_text']); ?></span>
+                                <span class="message-time"><?php echo date('H:i', strtotime($msg['timestamp'])); ?></span>
                             </div>
                         </div>
                     </div>
@@ -502,9 +516,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message own';
                 messageDiv.innerHTML = `
-                    <div>
-                        <div class="message-content">${data.message}</div>
-                        <div class="message-time">${data.time}</div>
+                    <div class="message-wrapper">
+                        <div class="message-content">
+                            <span class="msg-text">${data.message}</span>
+                            <span class="message-time">${data.time}</span>
+                        </div>
                     </div>
                 `;
                 messagesBox.appendChild(messageDiv);

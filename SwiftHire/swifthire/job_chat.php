@@ -71,10 +71,12 @@ if (!$owner_available || $owner_name === '') {
         .chat-wrap { max-width: 900px; margin: 24px auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; }
         .chat-header { background: #0f172a; color: #fff; padding: 14px 18px; }
         .chat-messages { height: 460px; overflow-y: auto; background: #f8fafc; padding: 16px; }
-        .chat-bubble { max-width: 72%; padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; word-wrap: break-word; }
-        .chat-bubble.me { background: #4f46e5; color: #fff; border-bottom-right-radius: 6px; }
-        .chat-bubble.them { background: #e2e8f0; color: #0f172a; border-bottom-left-radius: 6px; }
-        .chat-time { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+        .chat-bubble-wrapper { max-width: 75%; display: flex; }
+        .chat-bubble { padding: 6px 12px 8px 12px; border-radius: 8px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); word-wrap: break-word; }
+        .chat-bubble.me { background: #d9fdd3; color: #111b21; border-top-right-radius: 0; }
+        .chat-bubble.them { background: #ffffff; color: #111b21; border-top-left-radius: 0; }
+        .msg-text { font-size: 0.95rem; line-height: 1.4; color: #111b21; white-space: pre-wrap; }
+        .msg-time { font-size: 0.65rem; color: #667781; float: right; margin-top: 10px; margin-left: 12px; line-height: 1; }
     </style>
 </head>
 <body>
@@ -154,16 +156,22 @@ function renderMessage(msg) {
     row.className = 'd-flex mb-2 ' + (mine ? 'justify-content-end' : 'justify-content-start');
 
     const bubbleWrap = document.createElement('div');
+    bubbleWrap.className = 'chat-bubble-wrapper';
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble ' + (mine ? 'me' : 'them');
-    bubble.textContent = msg.message_text || '';
-    bubbleWrap.appendChild(bubble);
+    
+    const msgText = document.createElement('span');
+    msgText.className = 'msg-text';
+    msgText.textContent = msg.message_text || '';
+    bubble.appendChild(msgText);
 
-    const time = document.createElement('div');
-    time.className = 'chat-time';
+    const time = document.createElement('span');
+    time.className = 'msg-time';
     const ts = msg.timestamp ? new Date(msg.timestamp.replace(' ', 'T')) : null;
     time.textContent = ts && !isNaN(ts.getTime()) ? ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-    bubbleWrap.appendChild(time);
+    bubble.appendChild(time);
+    
+    bubbleWrap.appendChild(bubble);
 
     row.appendChild(bubbleWrap);
     chatMessagesEl.appendChild(row);
