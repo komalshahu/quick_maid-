@@ -11,7 +11,19 @@ $user_id = $_SESSION['user_id'];
 $first_name = htmlspecialchars($_SESSION['user_firstname']);
 
 // Fetch user's applications
-$stmt = $conn->prepare("SELECT * FROM job_applications WHERE user_id = ? ORDER BY applied_at DESC");
+$stmt = $conn->prepare("
+    SELECT
+        ja.*,
+        v.job_title,
+        v.user_id AS owner_id,
+        u.firstname AS owner_firstname,
+        u.lastname AS owner_lastname
+    FROM job_applications ja
+    LEFT JOIN vacancies v ON ja.job_id = v.id
+    LEFT JOIN users u ON v.user_id = u.id
+    WHERE ja.user_id = ?
+    ORDER BY ja.applied_at DESC
+");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -189,17 +201,19 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                     if ($row['status'] === 'Accepted') {
                         $status_class = 'status-received';
                         $status_text = 'Accepted';
-                        $chat_btn = '<a href="messages.php" class="btn btn-primary btn-sm rounded-pill mt-3"><i class="fas fa-comments"></i> Chat with Owner</a>';
+                        if ((int)$row['job_id'] > 0 && (int)$row['owner_id'] > 0) {
+                            $chat_btn = '<a href="job_chat.php?job_id=' . (int)$row['job_id'] . '&owner_id=' . (int)$row['owner_id'] . ($hide_nav ? '&nomdi=1' : '') . '" class="btn btn-primary btn-sm rounded-pill mt-3"><i class="fas fa-comments"></i> Chat with Owner</a>';
+                        }
                     }
                 ?>
                     <div class="col-12">
-                        <div class="app-card">
+                        <div class="app-card" id="app-<?php echo (int)$row['job_id']; ?>">
                             <div class="status-badge <?php echo $status_class; ?>">
                                 <i class="fas <?php echo $status_icon; ?>"></i> <?php echo $status_text; ?>
                             </div>
                             
                             <div class="job-id-text">Reference ID: #QK-<?php echo str_pad($row['id'], 5, '0', STR_PAD_LEFT); ?></div>
-                            <h3 class="job-title">Domestic Service Application</h3>
+                            <h3 class="job-title"><?php echo htmlspecialchars($row['job_title'] ?: 'Domestic Service Application'); ?></h3>
                             
                             <div class="row">
                                 <div class="col-md-6">
@@ -221,6 +235,12 @@ $hide_nav = isset($_GET['nomdi']) && $_GET['nomdi'] == '1';
                                         <i class="fas fa-envelope"></i>
                                         <span>Verified: <?php echo htmlspecialchars($row['email']); ?></span>
                                     </div>
+                                    <?php if (!empty($row['owner_firstname'])): ?>
+                                    <div class="meta-line">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span>Owner: <?php echo htmlspecialchars(trim($row['owner_firstname'] . ' ' . $row['owner_lastname'])); ?></span>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 

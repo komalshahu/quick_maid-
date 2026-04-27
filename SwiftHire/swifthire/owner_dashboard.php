@@ -64,6 +64,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
         <a class="navbar-brand fw-bold" href="owner_dashboard.php"><i class="fas fa-home me-2"></i> QuickMaid Owner</a>
         <div class="d-flex gap-3 align-items-center">
             <?php include 'notifications_ui.php'; ?>
+            <a href="owner_chat_dashboard.php" class="btn btn-outline-light rounded-pill px-4"><i class="fas fa-comments"></i> Chats</a>
             <a href="owner_inbox.php" class="btn btn-outline-light rounded-pill px-4"><i class="fas fa-envelope"></i> Inbox</a>
             <a href="logout.php" class="btn btn-light text-dark rounded-pill px-4">Logout</a>
         </div>
@@ -96,6 +97,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'owner') {
                 <div class="icon-circle"><i class="fas fa-search"></i></div>
                 <h4 class="fw-bold">Browse Maids</h4>
                 <p class="text-muted">Directly search and view profiles of available maids.</p>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="owner_chat_dashboard.php" class="action-card">
+                <div class="icon-circle"><i class="fas fa-comments"></i></div>
+                <h4 class="fw-bold">Applicant Chats</h4>
+                <p class="text-muted">Manage all maid inquiries and continue conversations in one place.</p>
             </a>
         </div>
     </div>

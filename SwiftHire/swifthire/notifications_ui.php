@@ -48,10 +48,11 @@ function fetchNotifications() {
                     data.notifications.forEach(n => {
                         let icon = n.type === 'message' ? 'fa-comment-dots' : 'fa-info-circle';
                         let color = n.type === 'message' ? 'text-primary' : 'text-success';
+                        const targetUrl = encodeURIComponent(n.target_url || '');
                         
                         let li = document.createElement('li');
                         li.innerHTML = `
-                            <a class="dropdown-item py-2" href="#" onclick="handleNotifClick(event, ${n.id}, '${n.type}', ${n.related_id})">
+                            <a class="dropdown-item py-2" href="#" onclick="handleNotifClick(event, ${n.id}, '${targetUrl}')">
                                 <div class="d-flex align-items-start gap-2">
                                     <i class="fas ${icon} ${color} mt-1"></i>
                                     <div>
@@ -69,24 +70,18 @@ function fetchNotifications() {
                     list.innerHTML = '<li><div class="dropdown-item text-center text-muted py-2">No new notifications</div></li>';
                 }
             }
-        });
+    });
 }
 
-function handleNotifClick(e, id, type, relatedId) {
+function handleNotifClick(e, id, encodedTargetUrl) {
     e.preventDefault();
     fetch('mark_notifications_read.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'id=' + id
     }).then(() => {
-        let targetUrl = '';
-        if (type === 'application_received') {
-            targetUrl = 'owner_inbox.php#app-' + relatedId;
-        } else if (type === 'application_accepted' || type === 'request') {
-            targetUrl = 'user_dashboard.php#app-' + relatedId;
-        } else if (type === 'message') {
-            targetUrl = 'messages.php?application_id=' + relatedId;
-        } else {
+        let targetUrl = encodedTargetUrl ? decodeURIComponent(encodedTargetUrl) : '';
+        if (!targetUrl) {
             fetchNotifications();
             return;
         }

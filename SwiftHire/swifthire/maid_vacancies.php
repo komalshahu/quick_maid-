@@ -520,7 +520,7 @@ while($l = $loc_res->fetch_assoc()) { $india_locations[] = $l['location']; }
                             </div>
                             <div class="job-actions">
                                 <a
-                                    href="job_chat.php?job_id=<?php echo (int)$v['id']; ?><?php echo $hide_nav ? '&nomdi=1' : ''; ?>"
+                                    href="job_chat.php?job_id=<?php echo (int)$v['id']; ?><?php echo !empty($v['poster_user_id']) ? '&owner_id=' . (int)$v['poster_user_id'] : ''; ?><?php echo $hide_nav ? '&nomdi=1' : ''; ?>"
                                     class="btn-chat-owner"
                                     title="Chat with Owner"
                                 >

@@ -57,6 +57,15 @@ if ($owner_available) {
 $is_owner = ($current_user_id === $owner_id);
 $receiver_id = $is_owner ? $maid_id : $owner_id;
 
+if ($is_owner && $maid_id > 0) {
+    $redirect_url = 'owner_chat_dashboard.php?job_id=' . $job_id . '&maid_id=' . $maid_id;
+    if ($hide_nav) {
+        $redirect_url .= '&nomdi=1';
+    }
+    header("Location: $redirect_url");
+    exit;
+}
+
 $other_party_name = 'User';
 if ($is_owner) {
     if ($maid_id > 0) {
@@ -200,7 +209,7 @@ async function fetchMessages() {
     if (!OWNER_AVAILABLE) return;
     try {
         const u = new URL('fetch_messages.php', window.location.href);
-        u.searchParams.set('owner_id', RECEIVER_ID);
+        u.searchParams.set('other_user_id', RECEIVER_ID);
         u.searchParams.set('job_id', JOB_ID);
         if (sinceId > 0) u.searchParams.set('since_id', sinceId);
 
@@ -274,4 +283,3 @@ window.addEventListener('beforeunload', () => {
 </script>
 </body>
 </html>
-

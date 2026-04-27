@@ -52,6 +52,7 @@ if (!$job_row || (int)$job_row['user_id'] <= 0) {
 // Determine true receiver based on whether the sender is the job owner
 $job_owner_id = (int)$job_row['user_id'];
 $requested_receiver = isset($_POST['receiver_id']) ? (int)$_POST['receiver_id'] : 0;
+$notification_related_id = $job_id;
 
 if ($sender_id === $job_owner_id) {
     // Sender is owner, receiver must be the maid
@@ -66,6 +67,36 @@ if ($sender_id === $receiver_id || $receiver_id <= 0) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Invalid receiver']);
     exit;
+}
+
+if ($sender_id === $job_owner_id) {
+    $app_stmt = $conn->prepare("
+        SELECT id
+        FROM job_applications
+        WHERE job_id = ? AND user_id = ?
+        LIMIT 1
+    ");
+    $app_stmt->bind_param("ii", $job_id, $receiver_id);
+    $app_stmt->execute();
+    $app_res = $app_stmt->get_result();
+    $app_row = $app_res ? $app_res->fetch_assoc() : null;
+    $app_stmt->close();
+} else {
+    $app_stmt = $conn->prepare("
+        SELECT id
+        FROM job_applications
+        WHERE job_id = ? AND user_id = ?
+        LIMIT 1
+    ");
+    $app_stmt->bind_param("ii", $job_id, $sender_id);
+    $app_stmt->execute();
+    $app_res = $app_stmt->get_result();
+    $app_row = $app_res ? $app_res->fetch_assoc() : null;
+    $app_stmt->close();
+}
+
+if (!empty($app_row['id'])) {
+    $notification_related_id = (int)$app_row['id'];
 }
 
 $insert_stmt = $conn->prepare("
@@ -101,9 +132,13 @@ $u_stmt->close();
 
 $notif_body = "New message from $sender_name: " . mb_substr($message_text, 0, 50) . (mb_strlen($message_text) > 50 ? '...' : '');
 $n_stmt = $conn->prepare("INSERT INTO notifications (user_id, type, message_body, related_id) VALUES (?, 'message', ?, ?)");
-$n_stmt->bind_param("isi", $receiver_id, $notif_body, $job_id);
+$n_stmt->bind_param("isi", $receiver_id, $notif_body, $notification_related_id);
 $n_stmt->execute();
 $n_stmt->close();
 
-echo json_encode(['success' => true, 'message' => $msg]);
+echo json_encode([
+    'success' => true,
+    'chat_key' => implode('-', [$job_id, min($sender_id, $receiver_id), max($sender_id, $receiver_id)]),
+    'message' => $msg
+]);
 ?>

@@ -71,7 +71,7 @@ $stmt->close();
         <div class="row">
             <?php foreach ($applications as $app): ?>
                 <div class="col-md-6">
-                    <div class="app-card">
+                    <div class="app-card" id="app-<?php echo (int)$app['id']; ?>">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <h5 class="fw-bold mb-1"><?php echo htmlspecialchars($app['firstname'] . ' ' . $app['lastname']); ?></h5>
@@ -126,7 +126,7 @@ $stmt->close();
                                 <button onclick="updateStatus(<?php echo $app['id']; ?>, 'Accepted')" class="btn btn-success btn-action"><i class="fas fa-check"></i> Accept Request</button>
                                 <button onclick="updateStatus(<?php echo $app['id']; ?>, 'Rejected')" class="btn btn-danger btn-action"><i class="fas fa-times"></i> Reject</button>
                             <?php elseif ($app['status'] == 'Accepted'): ?>
-                                <a href="job_chat.php?job_id=<?php echo $app['job_id']; ?>&maid_id=<?php echo $app['user_id']; ?>" class="btn btn-primary btn-action"><i class="fas fa-comments"></i> Chat with Maid</a>
+                                <a href="owner_chat_dashboard.php?job_id=<?php echo $app['job_id']; ?>&maid_id=<?php echo $app['user_id']; ?>" class="btn btn-primary btn-action"><i class="fas fa-comments"></i> Chat with Maid</a>
                                 <button onclick="markComplete(<?php echo $app['id']; ?>, <?php echo $app['job_id']; ?>, <?php echo $app['user_id']; ?>)" class="btn btn-dark btn-action"><i class="fas fa-check-circle"></i> Mark as Complete</button>
                             <?php endif; ?>
                         </div>
